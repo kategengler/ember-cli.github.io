@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>DefaultPackager - ember-cli</title>
+    <title>tests/.eslintrc.js - ember-cli</title>
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/yui/3.18.0/yui/yui-min.js"></script>
@@ -65,37 +65,6 @@
             </div>
             
             
-            <div id="sections" class="sidebox">
-              <div class="hd">
-                <h2 class="no-toc">DefaultPackager</h2>
-              </div>
-              <div class="bd">
-            
-            
-                  <div><a href="#constructor-summary">Constructor Summary</a></div>
-            
-            
-            
-            
-            
-            
-            
-            
-            
-                  <div><a href="#public-constructors">Public Constructors</a></div>
-                  <ul>
-                      <li><a href="#method_DefaultPackager">DefaultPackager</a></li>
-                  </ul>
-            
-            
-            
-            
-            
-            
-            
-            
-              </div>
-            </div>
             
             
             
@@ -107,89 +76,58 @@
 
         <div id="main" class="yui3-u">
             <div class="content"><div class="title">
-    <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
-    <h1 class="class-name">DefaultPackager</h1>
+  <h1 class="file-name">tests/.eslintrc.js</h1>
 </div>
 
+<pre class="code prettyprint linenums">
+&#x27;use strict&#x27;;
 
+module.exports = {
+  plugins: [&#x27;chai-expect&#x27;, &#x27;mocha&#x27;],
+  env: {
+    mocha: true,
+  },
+  rules: {
+    // JSHint &quot;expr&quot;, disabled due to chai expect assertions
+    &#x27;no-unused-expressions&#x27;: 0,
 
+    // disabled for easier asserting of file contents
+    quotes: 0,
 
-<div class="class-description"><p>Responsible for packaging Ember.js application.</p>
-</div>
+    // disabled because describe(), it(), etc. should not use arrow functions
+    &#x27;prefer-arrow-callback&#x27;: 0,
 
+    camelcase: [&#x27;error&#x27;, { allow: [&#x27;bower_components&#x27;, &#x27;node_modules&#x27;] }],
 
+    /*** chai-expect ***/
 
+    &#x27;chai-expect/missing-assertion&#x27;: 2,
+    &#x27;chai-expect/terminating-properties&#x27;: 2,
+    &#x27;chai-expect/no-inner-compare&#x27;: 2,
 
-  <h2 id="constructor-summary">Constructor Summary</h2>
+    /*** mocha ***/
 
-    <table class="summary">
-      <thead>
-      <tr>
-        <th colspan="2">Public Constructors</th>
-      </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            public
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
-              <a href="#method_DefaultPackager">DefaultPackager</a>( )
-            </div>
-            <div class="short-description">
-              <p>Responsible for packaging Ember.js application.</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    &#x27;mocha/no-exclusive-tests&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/no-skipped-tests&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/no-pending-tests&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/handle-done-callback&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/no-synchronous-tests&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/no-global-tests&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/no-return-and-callback&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/valid-test-description&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/valid-suite-description&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/no-sibling-hooks&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/no-mocha-arrows&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/no-hooks&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/no-hooks-for-single-case&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/no-top-level-hooks&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/no-identical-title&#x27;: &#x27;error&#x27;,
+    &#x27;mocha/max-top-level-suites&#x27;: &#x27;off&#x27;,
+    &#x27;mocha/no-nested-tests&#x27;: &#x27;error&#x27;,
+  },
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-  <div id="methods public">
-    <h2 id="public-constructors">Public Constructors</h2>
-<div class="method item">
-    <div id="method_DefaultPackager" class="title">
-        <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
-        <h3 class="">
-            public
-            
-            
-            DefaultPackager( )
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"></div>
-
-
-
-
-</div>
-  </div>
-
-
-
-
-
-
-
-
-
+</pre>
 
 </div>
         </div>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>NpmTask - ember-cli</title>
+    <title>CommandGenerator - ember-cli</title>
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/yui/3.18.0/yui/yui-min.js"></script>
@@ -67,7 +67,7 @@
             
             <div id="sections" class="sidebox">
               <div class="hd">
-                <h2 class="no-toc">NpmTask</h2>
+                <h2 class="no-toc">CommandGenerator</h2>
               </div>
               <div class="bd">
             
@@ -87,7 +87,7 @@
             
                   <div><a href="#private-constructors">Private Constructors</a></div>
                   <ul>
-                      <li><a href="#method_NpmTask">NpmTask</a></li>
+                      <li><a href="#method_CommandGenerator">CommandGenerator</a></li>
                   </ul>
             
             
@@ -97,8 +97,7 @@
             
                   <div><a href="#private-methods">Private Methods</a></div>
                   <ul>
-                      <li><a href="#method_findPackageManager">findPackageManager</a></li>
-                      <li><a href="#method_onInterrupt">onInterrupt</a></li>
+                      <li><a href="#method_command">command</a></li>
                   </ul>
               </div>
             </div>
@@ -113,14 +112,20 @@
 
         <div id="main" class="yui3-u">
             <div class="content"><div class="title">
-    <span class="source-link"><a href="../files/lib_tasks_npm-task.js.html#l16"><code>lib&#x2F;tasks&#x2F;npm-task.js:16</code></a></span>
-    <h1 class="class-name">NpmTask</h1>
+    <span class="source-link"><a href="../files/tests_helpers_command-generator.js.html#l5"><code>tests&#x2F;helpers&#x2F;command-generator.js:5</code></a></span>
+    <h1 class="class-name">CommandGenerator</h1>
 </div>
 
 
 
 
-<div class="class-description"></div>
+<div class="class-description"><p>A simple tool to make behavior and API consistent between commands
+the user wraps in this.</p>
+<p>Usage:</p>
+<pre class="code prettyprint"><code>var bower = new CommandGenerator(require.resolve('bower/bin/bower'));
+bower.invoke('install', 'ember');
+</code></pre>
+</div>
 
 
 
@@ -144,10 +149,10 @@
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_NpmTask">NpmTask</a>(options)
+              <a href="#method_CommandGenerator">CommandGenerator</a>(program): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="crosslink external" target="_blank">Function</a>
             </div>
             <div class="short-description">
-              
+              <p>A simple tool to make behavior and API consistent between commands the user wraps in this.</p>
             </div>
           </td>
         </tr>
@@ -176,25 +181,10 @@
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_findPackageManager">findPackageManager</a>( ): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
+              <a href="#method_command">command</a>([arguments], [options={}])
             </div>
             <div class="short-description">
-              <p>This method will determine what package manager (npm or yarn) should be used to install the npm dependencies.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            private
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
-              <a href="#method_onInterrupt">onInterrupt</a>( )
-            </div>
-            <div class="short-description">
-              <p>Exit silently</p>
+              <p>The <code>invoke</code> method is responsible for building the final executable command.</p>
             </div>
           </td>
         </tr>
@@ -212,13 +202,13 @@
   <div id="methods private">
     <h2 id="private-constructors">Private Constructors</h2>
 <div class="method item private">
-    <div id="method_NpmTask" class="title">
-        <span class="source-link"><a href="../files/lib_tasks_npm-task.js.html#l16"><code>lib&#x2F;tasks&#x2F;npm-task.js:16</code></a></span>
+    <div id="method_CommandGenerator" class="title">
+        <span class="source-link"><a href="../files/tests_helpers_command-generator.js.html#l5"><code>tests&#x2F;helpers&#x2F;command-generator.js:5</code></a></span>
         <h3 class="">
             private
             
             
-            NpmTask(options)
+            CommandGenerator(program): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="crosslink external" target="_blank">Function</a>
         </h3>
     </div>
 
@@ -239,8 +229,8 @@
           </thead>
           <tbody>
             <tr>
-              <td>options</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+              <td>program</td>
+              <td>Path</td>
               <td>
                 <ul>
                   
@@ -248,13 +238,22 @@
                   
                 </ul>
               </td>
-              <td> </td>
+              <td><p>The path to the command.</p>
+</td>
             </tr>
 
           </tbody>
         </table>
       </div>
 
+      <div class="return">
+        <h4>Return:</h4>
+        <div>
+          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function" class="crosslink external" target="_blank">Function</a></span>
+          <span class="return-description"><p>A command helper.</p>
+</span>
+        </div>
+      </div>
 
 
 </div>
@@ -268,53 +267,65 @@
     <div id="methods private">
         <h2 id="private-methods">Private Methods</h2>
 <div class="method item private">
-    <div id="method_findPackageManager" class="title">
-        <span class="source-link"><a href="../files/lib_tasks_npm-task.js.html#l113"><code>lib&#x2F;tasks&#x2F;npm-task.js:113</code></a></span>
+    <div id="method_command" class="title">
+        <span class="source-link"><a href="../files/tests_helpers_command-generator.js.html#l27"><code>tests&#x2F;helpers&#x2F;command-generator.js:27</code></a></span>
         <h3 class="">
             private
             
             
-            findPackageManager( ): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
+            command([arguments], [options={}])
         </h3>
     </div>
 
 
 
-    <div class="method-description"><p>This method will determine what package manager (npm or yarn) should be
-used to install the npm dependencies.</p>
-<p>Setting <code>this.useYarn</code> to <code>true</code> or <code>false</code> will force the use of yarn
-or npm respectively.</p>
-<p>If <code>this.useYarn</code> is not set we check if <code>yarn.lock</code> exists and if
-<code>yarn</code> is available and in that case set <code>useYarn</code> to <code>true</code>.</p>
+    <div class="method-description"><p>The <code>invoke</code> method is responsible for building the final executable command.</p>
 </div>
 
+      <div class="params">
+        <h4>Parameters:</h4>
+        <table>
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>arguments</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
+              <td>
+                <ul>
+                  <li>optional</li>
+                  
+                  <li>multiple</li>
+                </ul>
+              </td>
+              <td><p>Arguments to be passed into the command.</p>
+</td>
+            </tr>
 
-      <div class="return">
-        <h4>Return:</h4>
-        <div>
-          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a></span>
-          <span class="return-description"></span>
-        </div>
+            <tr>
+              <td>options</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+              <td>
+                <ul>
+                  <li>optional</li>
+                  <li>default: {}</li>
+                  
+                </ul>
+              </td>
+              <td><p>The options passed into child_process.spawnSync.
+(<a href="https://nodejs.org/api/child_process.html#child_process_child_process_spawnsync_command_args_options">https://nodejs.org/api/child_process.html#child_process_child_process_spawnsync_command_args_options</a>)</p>
+</td>
+            </tr>
+
+          </tbody>
+        </table>
       </div>
-
-
-</div>
-<div class="method item private">
-    <div id="method_onInterrupt" class="title">
-        <span class="source-link"><a href="../files/lib_tasks_build-watch.js.html#l49"><code>lib&#x2F;tasks&#x2F;build-watch.js:49</code></a></span>
-        <h3 class="">
-            private
-            
-            
-            onInterrupt( )
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"><p>Exit silently</p>
-</div>
-
 
 
 
