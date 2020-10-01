@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>DefaultPackager - ember-cli</title>
+    <title>PrivateTestHelpers - ember-cli</title>
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/yui/3.18.0/yui/yui-min.js"></script>
@@ -67,12 +67,15 @@
             
             <div id="sections" class="sidebox">
               <div class="hd">
-                <h2 class="no-toc">DefaultPackager</h2>
+                <h2 class="no-toc">PrivateTestHelpers</h2>
               </div>
               <div class="bd">
             
             
-                  <div><a href="#constructor-summary">Constructor Summary</a></div>
+            
+                  <div><a href="#property-summary">Property Summary</a></div>
+            
+                  <div><a href="#method-summary">Method Summary</a></div>
             
             
             
@@ -82,16 +85,18 @@
             
             
             
-                  <div><a href="#public-constructors">Public Constructors</a></div>
+            
+                  <div><a href="#public-properties">Public Properties</a></div>
                   <ul>
-                      <li><a href="#method_DefaultPackager">DefaultPackager</a></li>
+                      <li><a href="#props_options.command The command you want to run">options.command The command you want to run</a></li>
                   </ul>
             
             
             
-            
-            
-            
+                  <div><a href="#public-methods">Public Methods</a></div>
+                  <ul>
+                      <li><a href="#method_linkDependencies">linkDependencies</a></li>
+                  </ul>
             
             
               </div>
@@ -107,25 +112,56 @@
 
         <div id="main" class="yui3-u">
             <div class="content"><div class="title">
-    <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
-    <h1 class="class-name">DefaultPackager</h1>
+    <span class="source-link"><a href="../files/tests_helpers_acceptance.js.html#l46"><code>tests&#x2F;helpers&#x2F;acceptance.js:46</code></a></span>
+    <h1 class="class-name">PrivateTestHelpers</h1>
 </div>
 
 
 
 
-<div class="class-description"><p>Responsible for packaging Ember.js application.</p>
-</div>
+<div class="class-description"></div>
 
 
 
 
-  <h2 id="constructor-summary">Constructor Summary</h2>
+
+
+
+  <h2 id="property-summary">Property Summary</h2>
 
     <table class="summary">
       <thead>
       <tr>
-        <th colspan="2">Public Constructors</th>
+        <th colspan="2">Public Properties</th>
+      </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            public
+            
+            
+          </td>
+          <td>
+            <div class="property-name ">
+              <a href="#props_options.command The command you want to run">options.command The command you want to run</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
+            </div>
+            <div class="short-description">
+              <p>Use <code>createTestTargets</code> in the before hook to do the initial setup of a project. This will ensure that we limit the amount of times we go to the network to fetch dependencies.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+
+
+  <h2 id="method-summary">Method Summary</h2>
+
+    <table class="summary">
+      <thead>
+      <tr>
+        <th colspan="2">Public Methods</th>
       </tr>
       </thead>
       <tbody>
@@ -137,10 +173,10 @@
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_DefaultPackager">DefaultPackager</a>( )
+              <a href="#method_linkDependencies">linkDependencies</a>(projectName): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
             </div>
             <div class="short-description">
-              <p>Responsible for packaging Ember.js application.</p>
+              <p>Creates symbolic links from the dependency temp directories to the project that is under test.</p>
             </div>
           </td>
         </tr>
@@ -158,35 +194,91 @@
 
 
 
+    <div id="properties public">
+        <h2 id="public-properties">Public Properties</h2>
+<div class="property item">
+  <div id="props_options.command The command you want to run" class="title">
+    <span class="source-link"><a href="../files/tests_helpers_acceptance.js.html#l50"><code>tests&#x2F;helpers&#x2F;acceptance.js:50</code></a></span>
+    <h3 class="">
+      public
+      
+      
+      options.command The command you want to run: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
+    </h3>
+  </div>
+
+
+  <div class="property-description"><p>Use <code>createTestTargets</code> in the before hook to do the initial
+setup of a project. This will ensure that we limit the amount of times
+we go to the network to fetch dependencies.</p>
+</div>
+
+</div>
+    </div>
+
+
 
   <div id="methods public">
-    <h2 id="public-constructors">Public Constructors</h2>
+    <h2 id="public-methods">Public Methods</h2>
 <div class="method item">
-    <div id="method_DefaultPackager" class="title">
-        <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
+    <div id="method_linkDependencies" class="title">
+        <span class="source-link"><a href="../files/tests_helpers_acceptance.js.html#l83"><code>tests&#x2F;helpers&#x2F;acceptance.js:83</code></a></span>
         <h3 class="">
             public
             
             
-            DefaultPackager( )
+            linkDependencies(projectName): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
         </h3>
     </div>
 
 
 
-    <div class="method-description"></div>
+    <div class="method-description"><p>Creates symbolic links from the dependency temp directories
+to the project that is under test.</p>
+</div>
 
+      <div class="params">
+        <h4>Parameters:</h4>
+        <table>
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>projectName</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
+              <td>
+                <ul>
+                  
+                  
+                  
+                </ul>
+              </td>
+              <td><p>The name of the project under test</p>
+</td>
+            </tr>
 
+          </tbody>
+        </table>
+      </div>
+
+      <div class="return">
+        <h4>Return:</h4>
+        <div>
+          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+          <span class="return-description"><p>The path to the hydrated fixture.</p>
+</span>
+        </div>
+      </div>
 
 
 </div>
   </div>
-
-
-
-
-
-
 
 
 

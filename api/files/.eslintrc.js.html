@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>DefaultPackager - ember-cli</title>
+    <title>.eslintrc.js - ember-cli</title>
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/yui/3.18.0/yui/yui-min.js"></script>
@@ -65,37 +65,6 @@
             </div>
             
             
-            <div id="sections" class="sidebox">
-              <div class="hd">
-                <h2 class="no-toc">DefaultPackager</h2>
-              </div>
-              <div class="bd">
-            
-            
-                  <div><a href="#constructor-summary">Constructor Summary</a></div>
-            
-            
-            
-            
-            
-            
-            
-            
-            
-                  <div><a href="#public-constructors">Public Constructors</a></div>
-                  <ul>
-                      <li><a href="#method_DefaultPackager">DefaultPackager</a></li>
-                  </ul>
-            
-            
-            
-            
-            
-            
-            
-            
-              </div>
-            </div>
             
             
             
@@ -107,89 +76,82 @@
 
         <div id="main" class="yui3-u">
             <div class="content"><div class="title">
-    <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
-    <h1 class="class-name">DefaultPackager</h1>
+  <h1 class="file-name">.eslintrc.js</h1>
 </div>
 
+<pre class="code prettyprint linenums">
+&#x27;use strict&#x27;;
 
+module.exports = {
+  root: true,
+  parserOptions: {
+    ecmaVersion: 2018,
+  },
+  plugins: [&#x27;node&#x27;, &#x27;prettier&#x27;],
+  extends: [&#x27;eslint:recommended&#x27;, &#x27;plugin:node/recommended&#x27;, &#x27;plugin:prettier/recommended&#x27;],
+  env: {
+    browser: false,
+    node: true,
+    es6: true,
+  },
+  globals: {},
+  rules: {
+    /*** Possible Errors ***/
 
+    &#x27;no-console&#x27;: &#x27;off&#x27;,
+    &#x27;no-template-curly-in-string&#x27;: &#x27;error&#x27;,
+    &#x27;no-unsafe-negation&#x27;: &#x27;error&#x27;,
 
-<div class="class-description"><p>Responsible for packaging Ember.js application.</p>
-</div>
+    /*** Best Practices ***/
 
+    curly: &#x27;error&#x27;,
+    eqeqeq: &#x27;error&#x27;,
+    &#x27;guard-for-in&#x27;: &#x27;off&#x27;,
+    &#x27;no-caller&#x27;: &#x27;error&#x27;,
+    &#x27;no-eq-null&#x27;: &#x27;error&#x27;,
+    &#x27;no-eval&#x27;: &#x27;error&#x27;,
+    &#x27;no-new&#x27;: &#x27;off&#x27;,
+    &#x27;no-unused-expressions&#x27;: [
+      &#x27;error&#x27;,
+      {
+        allowShortCircuit: true,
+        allowTernary: true,
+      },
+    ],
+    &#x27;wrap-iife&#x27;: &#x27;off&#x27;,
+    yoda: &#x27;error&#x27;,
 
+    /*** Strict Mode ***/
 
+    strict: [&#x27;error&#x27;, &#x27;global&#x27;],
 
-  <h2 id="constructor-summary">Constructor Summary</h2>
+    /*** Variables ***/
 
-    <table class="summary">
-      <thead>
-      <tr>
-        <th colspan="2">Public Constructors</th>
-      </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            public
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
-              <a href="#method_DefaultPackager">DefaultPackager</a>( )
-            </div>
-            <div class="short-description">
-              <p>Responsible for packaging Ember.js application.</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    &#x27;no-undef&#x27;: &#x27;error&#x27;,
+    &#x27;no-unused-vars&#x27;: &#x27;error&#x27;,
+    &#x27;no-use-before-define&#x27;: [&#x27;error&#x27;, &#x27;nofunc&#x27;],
 
+    /*** Stylistic Issues ***/
 
+    camelcase: &#x27;error&#x27;,
+    &#x27;new-cap&#x27;: [&#x27;error&#x27;, { properties: false }],
+    &#x27;no-array-constructor&#x27;: &#x27;error&#x27;,
+    &#x27;no-bitwise&#x27;: &#x27;error&#x27;,
+    &#x27;no-lonely-if&#x27;: &#x27;error&#x27;,
+    &#x27;no-plusplus&#x27;: &#x27;off&#x27;,
+    &#x27;no-unneeded-ternary&#x27;: &#x27;error&#x27;,
 
+    /*** ECMAScript 6 ***/
 
+    &#x27;no-useless-computed-key&#x27;: &#x27;error&#x27;,
+    &#x27;no-var&#x27;: &#x27;error&#x27;,
+    &#x27;object-shorthand&#x27;: &#x27;error&#x27;,
+    &#x27;prefer-template&#x27;: &#x27;error&#x27;,
+    &#x27;symbol-description&#x27;: &#x27;error&#x27;,
+  },
+};
 
-
-
-
-
-
-
-
-
-  <div id="methods public">
-    <h2 id="public-constructors">Public Constructors</h2>
-<div class="method item">
-    <div id="method_DefaultPackager" class="title">
-        <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
-        <h3 class="">
-            public
-            
-            
-            DefaultPackager( )
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"></div>
-
-
-
-
-</div>
-  </div>
-
-
-
-
-
-
-
-
-
+</pre>
 
 </div>
         </div>

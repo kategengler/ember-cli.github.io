@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>DefaultPackager - ember-cli</title>
+    <title>tests/helpers/command-generator.js - ember-cli</title>
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/yui/3.18.0/yui/yui-min.js"></script>
@@ -65,37 +65,6 @@
             </div>
             
             
-            <div id="sections" class="sidebox">
-              <div class="hd">
-                <h2 class="no-toc">DefaultPackager</h2>
-              </div>
-              <div class="bd">
-            
-            
-                  <div><a href="#constructor-summary">Constructor Summary</a></div>
-            
-            
-            
-            
-            
-            
-            
-            
-            
-                  <div><a href="#public-constructors">Public Constructors</a></div>
-                  <ul>
-                      <li><a href="#method_DefaultPackager">DefaultPackager</a></li>
-                  </ul>
-            
-            
-            
-            
-            
-            
-            
-            
-              </div>
-            </div>
             
             
             
@@ -107,89 +76,62 @@
 
         <div id="main" class="yui3-u">
             <div class="content"><div class="title">
-    <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
-    <h1 class="class-name">DefaultPackager</h1>
+  <h1 class="file-name">tests/helpers/command-generator.js</h1>
 </div>
 
+<pre class="code prettyprint linenums">
+&#x27;use strict&#x27;;
 
+const execa = require(&#x27;../../lib/utilities/execa&#x27;);
 
+/**
+ * A simple tool to make behavior and API consistent between commands
+ * the user wraps in this.
+ *
+ * Usage:
+ *
+ * &#x60;&#x60;&#x60;
+ * var bower = new CommandGenerator(require.resolve(&#x27;bower/bin/bower&#x27;));
+ * bower.invoke(&#x27;install&#x27;, &#x27;ember&#x27;);
+ * &#x60;&#x60;&#x60;
+ *
+ * @private
+ * @class CommandGenerator
+ * @constructor
+ * @param {Path} program The path to the command.
+ * @return {Function} A command helper.
+ */
+module.exports = class CommandGenerator {
+  constructor(program) {
+    this.program = program;
+  }
 
-<div class="class-description"><p>Responsible for packaging Ember.js application.</p>
-</div>
+  /**
+   * The &#x60;invoke&#x60; method is responsible for building the final executable command.
+   *
+   * @private
+   * @method command
+   * @param {String} [...arguments] Arguments to be passed into the command.
+   * @param {Object} [options={}] The options passed into child_process.spawnSync.
+   *   (https://nodejs.org/api/child_process.html#child_process_child_process_spawnsync_command_args_options)
+   */
+  invoke() {
+    let args = Array.prototype.slice.call(arguments);
+    let options = {};
 
+    if (typeof args[args.length - 1] === &#x27;object&#x27;) {
+      options = args.pop();
+    }
 
+    return this._invoke(args, options);
+  }
 
+  _invoke(args, options) {
+    return execa.sync(this.program, args, options);
+  }
+};
 
-  <h2 id="constructor-summary">Constructor Summary</h2>
-
-    <table class="summary">
-      <thead>
-      <tr>
-        <th colspan="2">Public Constructors</th>
-      </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            public
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
-              <a href="#method_DefaultPackager">DefaultPackager</a>( )
-            </div>
-            <div class="short-description">
-              <p>Responsible for packaging Ember.js application.</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <div id="methods public">
-    <h2 id="public-constructors">Public Constructors</h2>
-<div class="method item">
-    <div id="method_DefaultPackager" class="title">
-        <span class="source-link"><a href="../files/lib_broccoli_default-packager.js.html#l99"><code>lib&#x2F;broccoli&#x2F;default-packager.js:99</code></a></span>
-        <h3 class="">
-            public
-            
-            
-            DefaultPackager( )
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"></div>
-
-
-
-
-</div>
-  </div>
-
-
-
-
-
-
-
-
-
+</pre>
 
 </div>
         </div>
