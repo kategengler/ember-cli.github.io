@@ -15,3 +15,11 @@ This repository's content is hosted via Netlify, and unlike the guides content w
 4. Copy the contents of the `docs` folder into the `api` folder of this website repo
 5. Run the app locally with `http-server .` and make sure that they show up as they should
 6. Open a PR to this repository
+
+## About the redirects
+
+The redirect behavior is managed by Netlify. You can see the list of redirects [here](https://github.com/ember-learn/ember-cli.github.io/blob/master/_redirects).
+
+## Deploying
+
+PRs merged to this repository will be deployed automatically via Netlify's GitHub integration. The project name is `ember-cli.com` under the Ember org.
