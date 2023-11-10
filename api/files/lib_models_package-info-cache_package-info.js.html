@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -87,7 +85,10 @@ const ErrorList = require(&#x27;./error-list&#x27;);
 const Errors = require(&#x27;./errors&#x27;);
 const AddonInfo = require(&#x27;../addon-info&#x27;);
 const isAddon = require(&#x27;../../utilities/is-addon&#x27;);
+const isEngine = require(&#x27;../../utilities/is-engine&#x27;);
+const isLazyEngine = require(&#x27;../../utilities/is-lazy-engine&#x27;);
 const logger = require(&#x27;heimdalljs-logger&#x27;)(&#x27;ember-cli:package-info-cache:package-info&#x27;);
+const PerBundleAddonCache = require(&#x27;../per-bundle-addon-cache&#x27;);
 
 function lexicographically(a, b) {
   const aIsString = typeof a.name === &#x27;string&#x27;;
@@ -162,7 +163,7 @@ class PackageInfo {
     // not actually be used.
     this.valid = true;
 
-    this.mayHaveAddons = isRoot || this.isAddon(); // mayHaveAddons used in index.js
+    this.mayHaveAddons = isRoot || this.isForAddon(); // mayHaveAddons used in index.js
 
     this._hasDumpedInvalidAddonPackages = false;
   }
@@ -244,7 +245,7 @@ class PackageInfo {
    * been added to the cache.
    *
    * Note: this is for ALL dependencies, not just addons. To get just
-   * addons, filter the result by calling pkgInfo.isAddon().
+   * addons, filter the result by calling pkgInfo.isForAddon().
    *
    * Note: this is only intended for use from PackageInfoCache._resolveDependencies.
    * It is not to be called directly by anything else.
@@ -302,8 +303,57 @@ class PackageInfo {
     return packages;
   }
 
-  isAddon() {
+  /**
+   * Indicate if this packageInfo is for a project. Should be called only after the project
+   * has been loaded (see {@link PackageInfoCache#loadProject} for details).
+   *
+   * @method isForProject
+   * @return {Boolean} true if this packageInfo is for a Project, false otherwise.
+   */
+  isForProject() {
+    return !!this.project &amp;&amp; this.project.isEmberCLIProject &amp;&amp; this.project.isEmberCLIProject();
+  }
+
+  /**
+   * Indicate if this packageInfo is for an Addon.
+   *
+   * @method isForAddon
+   * @return {Boolean} true if this packageInfo is for an Addon, false otherwise.
+   */
+  isForAddon() {
     return isAddon(this.pkg.keywords);
+  }
+
+  /**
+   * Indicate if this packageInfo represents an engine.
+   *
+   * @method isForEngine
+   * @return {Boolean} true if this pkgInfo is configured as an engine &amp; false otherwise
+   */
+  isForEngine() {
+    return isEngine(this.pkg.keywords);
+  }
+
+  /**
+   * Indicate if this packageInfo represents a lazy engine.
+   *
+   * @method isForLazyEngine
+   * @return {Boolean} true if this pkgInfo is configured as an engine and the
+   * module this represents has lazyLoading enabled, false otherwise.
+   */
+  isForLazyEngine() {
+    return this.isForEngine() &amp;&amp; isLazyEngine(this._getAddonEntryPoint());
+  }
+
+  /**
+   * For use with the PerBundleAddonCache, is this packageInfo representing a
+   * bundle host (for now, a Project or a lazy engine).
+   *
+   * @method isForBundleHost
+   * @return {Boolean} true if this pkgInfo is for a bundle host, false otherwise.
+   */
+  isForBundleHost() {
+    return this.isForProject() || this.isForLazyEngine();
   }
 
   /**
@@ -356,7 +406,7 @@ class PackageInfo {
     this.addPackages(
       addonPackageList,
       this.dependencyPackages,
-      (pkgInfo) =&gt; !pkgInfo.isAddon() || pkgInfo.name === &#x27;ember-cli&#x27;
+      (pkgInfo) =&gt; !pkgInfo.isForAddon() || pkgInfo.name === &#x27;ember-cli&#x27;
     );
     this.addPackages(addonPackageList, this.inRepoAddons);
 
@@ -376,8 +426,8 @@ class PackageInfo {
     this.addPackages(addonPackageList, project.isEmberCLIAddon() ? [this] : null);
     this.addPackages(addonPackageList, this.cliInfo ? this.cliInfo.inRepoAddons : null);
     this.addPackages(addonPackageList, this.internalAddons);
-    this.addPackages(addonPackageList, this.devDependencyPackages, (pkgInfo) =&gt; !pkgInfo.isAddon());
-    this.addPackages(addonPackageList, this.dependencyPackages, (pkgInfo) =&gt; !pkgInfo.isAddon());
+    this.addPackages(addonPackageList, this.devDependencyPackages, (pkgInfo) =&gt; !pkgInfo.isForAddon());
+    this.addPackages(addonPackageList, this.dependencyPackages, (pkgInfo) =&gt; !pkgInfo.isForAddon());
     this.addPackages(addonPackageList, this.inRepoAddons);
 
     return addonPackageList;
@@ -442,11 +492,7 @@ class PackageInfo {
         });
       }
 
-      if (process.env.EMBER_CLI_ERROR_ON_INVALID_ADDON) {
-        throw msg;
-      } else {
-        this.cache.ui.writeWarnLine(msg);
-      }
+      throw msg;
     }
   }
 
@@ -455,6 +501,7 @@ class PackageInfo {
    * Also, the assumption here is that this PackageInfo really is for an
    * Addon, so we don&#x27;t need to check each time.
    *
+   * @private
    * @method getAddonConstructor
    * @return {AddonConstructor} an instance of a constructor function for the Addon class
    * whose package information is stored in this object.
@@ -464,10 +511,7 @@ class PackageInfo {
       return this.addonConstructor;
     }
 
-    // Load the addon.
-    // TODO: Future work - allow a time budget for loading each addon and warn
-    // or error for those that take too long.
-    let module = require(this.addonMainPath);
+    let module = this._getAddonEntryPoint();
     let mainDir = path.dirname(this.addonMainPath);
 
     let ctor;
@@ -475,23 +519,122 @@ class PackageInfo {
     if (typeof module === &#x27;function&#x27;) {
       ctor = module;
       ctor.prototype.root = ctor.prototype.root || mainDir;
+      ctor.prototype.packageRoot = ctor.prototype.packageRoot || this.realPath;
       ctor.prototype.pkg = ctor.prototype.pkg || this.pkg;
     } else {
       const Addon = require(&#x27;../addon&#x27;); // done here because of circular dependency
 
-      ctor = Addon.extend(Object.assign({ root: mainDir, pkg: this.pkg }, module));
+      ctor = Addon.extend(Object.assign({ root: mainDir, packageRoot: this.realPath, pkg: this.pkg }, module));
     }
 
-    // XXX Probably want to store the timings here in PackageInfo,
-    // rather than adding _meta_ to the constructor.
-    // XXX Will also need to remove calls to it from various places.
     ctor._meta_ = {
       modulePath: this.addonMainPath,
-      lookupDuration: 0,
-      initializeIn: 0,
     };
 
     return (this.addonConstructor = ctor);
+  }
+
+  /**
+   * Construct an addon instance.
+   *
+   * NOTE: this does NOT call constructors for the child addons. That is left to
+   * the caller to do, so they can insert any other logic they want.
+   *
+   * @private
+   * @method constructAddonInstance
+   * @param {Project|Addon} parent the parent that directly contains this addon
+   * @param {Project} project the project that is/contains this addon
+   */
+  constructAddonInstance(parent, project) {
+    let start = Date.now();
+
+    let AddonConstructor = this.getAddonConstructor();
+
+    let addonInstance;
+
+    try {
+      addonInstance = new AddonConstructor(parent, project);
+    } catch (e) {
+      if (parent &amp;&amp; parent.ui) {
+        parent.ui.writeError(e);
+      }
+
+      const SilentError = require(&#x27;silent-error&#x27;);
+      throw new SilentError(&#x60;An error occurred in the constructor for ${this.name} at ${this.realPath}&#x60;);
+    }
+
+    AddonConstructor._meta_.initializeIn = Date.now() - start;
+    addonInstance.constructor = AddonConstructor;
+
+    return addonInstance;
+  }
+
+  /**
+   * Create an instance of the addon represented by this packageInfo or (if we
+   * are supporting per-bundle caching and this is an allow-caching-per-bundle addon)
+   * check if we should be creating a proxy instead.
+   *
+   * NOTE: we assume that the value of &#x27;allowCachingPerBundle&#x27; does not change between
+   * calls to the constructor! A given addon is either allowing or not allowing caching
+   * for an entire run.
+   *
+   * @method getAddonInstance
+   * @param {} parent the addon/project that is to be the direct parent of the
+   * addon instance created here
+   * @param {*} project the project that is to contain this addon instance
+   * @return {Object} the constructed instance of the addon
+   */
+  getAddonInstance(parent, project) {
+    let addonEntryPointModule = this._getAddonEntryPoint();
+    let addonInstance;
+
+    if (
+      PerBundleAddonCache.isEnabled() &amp;&amp;
+      project &amp;&amp;
+      project.perBundleAddonCache.allowCachingPerBundle(addonEntryPointModule)
+    ) {
+      addonInstance = project.perBundleAddonCache.getAddonInstance(parent, this);
+    } else {
+      addonInstance = this.constructAddonInstance(parent, project);
+      this.initChildAddons(addonInstance);
+    }
+
+    return addonInstance;
+  }
+
+  /**
+   * Initialize the child addons array of a newly-created addon instance. Normally when
+   * an addon derives from Addon, child addons will be created during &#x27;setupRegistry&#x27; and
+   * this code is essentially unnecessary. But if an addon is created with custom constructors
+   * that don&#x27;t call &#x27;setupRegistry&#x27;, any child addons may not yet be initialized.
+   *
+   * @method initChildAddons
+   * @param {Addon} addonInstance
+   */
+  initChildAddons(addonInstance) {
+    if (addonInstance.initializeAddons) {
+      addonInstance.initializeAddons();
+    } else {
+      addonInstance.addons = [];
+    }
+  }
+
+  /**
+   * Gets the addon entry point
+   *
+   * @method _getAddonEntryPoint
+   * @return {Object|Function} The exported addon entry point
+   * @private
+   */
+  _getAddonEntryPoint() {
+    if (!this.addonMainPath) {
+      throw new Error(&#x60;${this.pkg.name} at ${this.realPath} is missing its addon main file&#x60;);
+    }
+
+    // Load the addon.
+    // TODO: Future work - allow a time budget for loading each addon and warn
+    // or error for those that take too long.
+    return require(this.addonMainPath);
   }
 }
 

@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -113,12 +111,6 @@ class CLI {
      * @type UI
      */
     this.ui = options.ui;
-
-    /**
-     * @private
-     * @property analytics
-     */
-    this.analytics = options.analytics;
 
     /**
      * @private
@@ -189,7 +181,6 @@ class CLI {
      */
     let command = new CurrentCommand({
       ui: this.ui,
-      analytics: this.analytics,
       commands: this._environment.commands,
       tasks: this._environment.tasks,
       project: this._environment.project,
@@ -231,38 +222,7 @@ class CLI {
         process.env[&#x60;EMBER_VERBOSE_${arg.toUpperCase()}&#x60;] = &#x27;true&#x27;;
       });
 
-      let platformCheckerToken = heimdall.start(&#x27;platform-checker&#x27;);
-
-      const PlatformChecker = require(&#x27;../utilities/platform-checker&#x27;);
-      let platform = new PlatformChecker(process.version);
-      let recommendation =
-        &#x27; We recommend that you use the most-recent &quot;Active LTS&quot; version of Node.js.&#x27; +
-        &#x27; See https://git.io/v7S5n for details.&#x27;;
-
-      if (!this.testing) {
-        if (platform.isDeprecated) {
-          this.ui.writeDeprecateLine(&#x60;Node ${process.version} is no longer supported by Ember CLI.${recommendation}&#x60;);
-        }
-
-        if (!platform.isTested) {
-          this.ui.writeWarnLine(
-            &#x60;Node ${process.version} is not tested against Ember CLI on your platform.${recommendation}&#x60;
-          );
-        }
-      }
-
-      platformCheckerToken.stop();
-
       logger.info(&#x27;command: %s&#x27;, commandName);
-
-      if (!this.testing) {
-        process.chdir(environment.project.root);
-        let skipInstallationCheck = commandArgs.indexOf(&#x27;--skip-installation-check&#x27;) !== -1;
-        if (environment.project.isEmberCLIProject() &amp;&amp; !skipInstallationCheck) {
-          const InstallationChecker = require(&#x27;../models/installation-checker&#x27;);
-          new InstallationChecker({ project: environment.project }).checkInstallations();
-        }
-      }
 
       let instrumentation = this.instrumentation;
       let onCommandInterrupt;
@@ -361,7 +321,6 @@ class CLI {
 
     let help = new HelpCommand({
       ui: this.ui,
-      analytics: this.analytics,
       commands: environment.commands,
       tasks: environment.tasks,
       project: environment.project,

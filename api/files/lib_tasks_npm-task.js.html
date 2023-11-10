@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -82,13 +80,11 @@
 <pre class="code prettyprint linenums">
 &#x27;use strict&#x27;;
 
-// Runs &#x60;npm install&#x60; in cwd
-
 const chalk = require(&#x27;chalk&#x27;);
 const execa = require(&#x27;../utilities/execa&#x27;);
 const semver = require(&#x27;semver&#x27;);
 const SilentError = require(&#x27;silent-error&#x27;);
-const isYarnProject = require(&#x27;../utilities/is-yarn-project&#x27;);
+const { isPnpmProject, isYarnProject } = require(&#x27;../utilities/package-managers&#x27;);
 
 const logger = require(&#x27;heimdalljs-logger&#x27;)(&#x27;ember-cli:npm-task&#x27;);
 
@@ -106,8 +102,10 @@ class NpmTask extends Task {
 
     // The command to run: can be &#x27;install&#x27; or &#x27;uninstall&#x27;
     this.command = &#x27;&#x27;;
+  }
 
-    this.versionConstraints = &#x27;3 || 4 || 5 || 6&#x27;;
+  get packageManagerOutputName() {
+    return this.packageManager.name;
   }
 
   npm(args) {
@@ -120,8 +118,17 @@ class NpmTask extends Task {
     return execa(&#x27;yarn&#x27;, args, { preferLocal: false });
   }
 
+  pnpm(args) {
+    logger.info(&#x27;pnpm: %j&#x27;, args);
+    return execa(&#x27;pnpm&#x27;, args, { preferLocal: false });
+  }
+
   hasYarnLock() {
     return isYarnProject(this.project.root);
+  }
+
+  hasPNPMLock() {
+    return isPnpmProject(this.project.root);
   }
 
   async checkYarn() {
@@ -131,14 +138,16 @@ class NpmTask extends Task {
 
       if (semver.gte(version, &#x27;2.0.0&#x27;)) {
         logger.warn(&#x27;yarn --version: %s&#x27;, version);
-        this.ui.writeWarnLine(&#x60;Yarn v2 is not fully supported. Proceeding with yarn: ${version}&#x60;);
+        let yarnConfig = await this.yarn([&#x27;config&#x27;, &#x27;get&#x27;, &#x27;nodeLinker&#x27;]);
+        let nodeLinker = yarnConfig.stdout.trim();
+        if (nodeLinker !== &#x27;node-modules&#x27;) {
+          this.ui.writeWarnLine(&#x60;Yarn v2 is not fully supported. Proceeding with yarn: ${version}&#x60;);
+        }
       } else {
         logger.info(&#x27;yarn --version: %s&#x27;, version);
       }
 
-      this.useYarn = true;
-
-      return { yarnVersion: version };
+      return { name: &#x27;yarn&#x27;, version };
     } catch (error) {
       logger.error(&#x27;yarn --version failed: %s&#x27;, error);
 
@@ -153,31 +162,35 @@ class NpmTask extends Task {
     }
   }
 
+  async checkPNPM() {
+    try {
+      let result = await this.pnpm([&#x27;--version&#x27;]);
+      let version = result.stdout;
+
+      logger.info(&#x27;pnpm --version: %s&#x27;, version);
+
+      return { name: &#x27;pnpm&#x27;, version };
+    } catch (error) {
+      logger.error(&#x27;pnpm --version failed: %s&#x27;, error);
+
+      if (error.code === &#x27;ENOENT&#x27;) {
+        throw new SilentError(
+          &#x27;Ember CLI is now using pnpm, but was not able to find it.\n&#x27; +
+            &#x27;Please install pnpm using the instructions at https://pnpm.io/installation&#x27;
+        );
+      }
+
+      throw error;
+    }
+  }
+
   async checkNpmVersion() {
     try {
       let result = await this.npm([&#x27;--version&#x27;]);
       let version = result.stdout;
       logger.info(&#x27;npm --version: %s&#x27;, version);
 
-      let ok = semver.satisfies(version, this.versionConstraints);
-      if (!ok) {
-        logger.warn(&#x27;npm --version is outside of version constraint: %s&#x27;, this.versionConstraints);
-
-        let below = semver.ltr(version, this.versionConstraints);
-        if (below) {
-          throw new SilentError(
-            &#x27;Ember CLI is now using the global npm, but your npm version is outdated.\n&#x27; +
-              &#x27;Please update your global npm version by running: npm install -g npm&#x27;
-          );
-        }
-
-        this.ui.writeWarnLine(
-          &#x27;Ember CLI is using the global npm, but your npm version has not yet been &#x27; +
-            &#x27;verified to work with the current Ember CLI release.&#x27;
-        );
-      }
-
-      return { npmVersion: version };
+      return { name: &#x27;npm&#x27;, version };
     } catch (error) {
       logger.error(&#x27;npm --version failed: %s&#x27;, error);
 
@@ -206,37 +219,55 @@ class NpmTask extends Task {
    * @method findPackageManager
    * @return {Promise}
    */
-  async findPackageManager() {
-    if (this.useYarn === true) {
+  async findPackageManager(packageManager = null) {
+    if (packageManager === &#x27;yarn&#x27;) {
       logger.info(&#x27;yarn requested -&gt; trying yarn&#x27;);
       return this.checkYarn();
     }
 
-    if (this.useYarn === false) {
+    if (packageManager === &#x27;npm&#x27;) {
       logger.info(&#x27;npm requested -&gt; using npm&#x27;);
       return this.checkNpmVersion();
     }
 
-    if (!this.hasYarnLock()) {
-      logger.info(&#x27;yarn.lock not found -&gt; using npm&#x27;);
-      return this.checkNpmVersion();
+    if (packageManager === &#x27;pnpm&#x27;) {
+      logger.info(&#x27;pnpm requested -&gt; using pnpm&#x27;);
+      return this.checkPNPM();
     }
 
-    logger.info(&#x27;yarn.lock found -&gt; trying yarn&#x27;);
-    try {
-      const yarnResult = await this.checkYarn();
-      logger.info(&#x27;yarn found -&gt; using yarn&#x27;);
-      return yarnResult;
-    } catch (_err) {
-      logger.info(&#x27;yarn not found -&gt; using npm&#x27;);
-      return this.checkNpmVersion();
+    if (this.hasYarnLock()) {
+      logger.info(&#x27;yarn.lock found -&gt; trying yarn&#x27;);
+      try {
+        const yarnResult = await this.checkYarn();
+        logger.info(&#x27;yarn found -&gt; using yarn&#x27;);
+        return yarnResult;
+      } catch (_err) {
+        logger.info(&#x27;yarn not found&#x27;);
+      }
+    } else {
+      logger.info(&#x27;yarn.lock not found&#x27;);
     }
+
+    if (await this.hasPNPMLock()) {
+      logger.info(&#x27;pnpm-lock.yaml found -&gt; trying pnpm&#x27;);
+      try {
+        let result = await this.checkPNPM();
+        logger.info(&#x27;pnpm found -&gt; using pnpm&#x27;);
+        return result;
+      } catch (_err) {
+        logger.info(&#x27;pnpm not found&#x27;);
+      }
+    } else {
+      logger.info(&#x27;pnpm-lock.yaml not found&#x27;);
+    }
+
+    logger.info(&#x27;using npm&#x27;);
+    return this.checkNpmVersion();
   }
 
   async run(options) {
-    this.useYarn = options.useYarn;
+    this.packageManager = await this.findPackageManager(options.packageManager);
 
-    let result = await this.findPackageManager();
     let ui = this.ui;
     let startMessage = this.formatStartMessage(options.packages);
     let completeMessage = this.formatCompleteMessage(options.packages);
@@ -247,31 +278,22 @@ class NpmTask extends Task {
     ui.writeLine(prependEmoji(&#x27;🚧&#x27;, &#x27;Installing packages... This might take a couple of minutes.&#x27;));
     ui.startProgress(chalk.green(startMessage));
 
-    let promise;
-    if (this.useYarn) {
-      this.yarnVersion = result.yarnVersion;
-      let args = this.toYarnArgs(this.command, options);
-      promise = this.yarn(args);
-    } else {
-      let args = this.toNpmArgs(this.command, options);
-      promise = this.npm(args);
-
-      // as of 2018-10-09 npm 5 and 6 _break_ the hierarchy of &#x60;node_modules&#x60;
-      // after a &#x60;npm install foo&#x60; (deletes files/folders other than
-      // what was directly installed) in some circumstances, see:
-      //
-      // * https://github.com/npm/npm/issues/16853
-      // * https://github.com/npm/npm/issues/17379
-      //
-      // this ensures that we run a full &#x60;npm install&#x60; **after** any &#x60;npm
-      // install foo&#x60; runs to ensure that we have a fully functional
-      // node_modules hierarchy
-      if (result.npmVersion &amp;&amp; semver.lt(result.npmVersion, &#x27;5.7.1&#x27;)) {
-        promise = promise.then(() =&gt; this.npm([&#x27;install&#x27;]));
+    try {
+      if (this.packageManager.name === &#x27;yarn&#x27;) {
+        let args = this.toYarnArgs(this.command, options);
+        await this.yarn(args);
+      } else if (this.packageManager.name === &#x27;pnpm&#x27;) {
+        let args = this.toPNPMArgs(this.command, options);
+        await this.pnpm(args);
+      } else {
+        let args = this.toNpmArgs(this.command, options);
+        await this.npm(args);
       }
+    } finally {
+      ui.stopProgress();
     }
 
-    return promise.finally(() =&gt; ui.stopProgress()).then(() =&gt; ui.writeLine(chalk.green(completeMessage)));
+    ui.writeLine(chalk.green(completeMessage));
   }
 
   toNpmArgs(command, options) {
@@ -294,9 +316,9 @@ class NpmTask extends Task {
     }
 
     if (options.verbose) {
-      args.push(&#x27;--loglevel verbose&#x27;);
+      args.push(&#x27;--loglevel&#x27;, &#x27;verbose&#x27;);
     } else {
-      args.push(&#x27;--loglevel error&#x27;);
+      args.push(&#x27;--loglevel&#x27;, &#x27;error&#x27;);
     }
 
     if (options.packages) {
@@ -344,8 +366,38 @@ class NpmTask extends Task {
     // Yarn v2 defaults to non-interactive
     // with an optional -i flag
 
-    if (semver.lt(this.yarnVersion, &#x27;2.0.0&#x27;)) {
+    if (semver.lt(this.packageManager.version, &#x27;2.0.0&#x27;)) {
       args.push(&#x27;--non-interactive&#x27;);
+    }
+
+    return args;
+  }
+
+  toPNPMArgs(command, options) {
+    let args = [];
+
+    if (command === &#x27;install&#x27;) {
+      if (options.save) {
+        args.push(&#x27;add&#x27;);
+      } else if (options[&#x27;save-dev&#x27;]) {
+        args.push(&#x27;add&#x27;, &#x27;--save-dev&#x27;);
+      } else if (options.packages) {
+        throw new Error(&#x60;npm command &quot;${command} ${options.packages.join(&#x27; &#x27;)}&quot; can not be translated to pnpm command&#x60;);
+      } else {
+        args.push(&#x27;install&#x27;);
+      }
+
+      if (options[&#x27;save-exact&#x27;]) {
+        args.push(&#x27;--save-exact&#x27;);
+      }
+    } else if (command === &#x27;uninstall&#x27;) {
+      args.push(&#x27;remove&#x27;);
+    } else {
+      throw new Error(&#x60;npm command &quot;${command}&quot; can not be translated to pnpm command&#x60;);
+    }
+
+    if (options.packages) {
+      args = args.concat(options.packages);
     }
 
     return args;

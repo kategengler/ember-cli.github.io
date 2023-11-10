@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -106,6 +104,10 @@
             
             
             
+                  <div><a href="#public-properties">Public Properties</a></div>
+                  <ul>
+                      <li><a href="#props_shouldTransformTypeScript">shouldTransformTypeScript</a></li>
+                  </ul>
             
             
                   <div><a href="#private-properties">Private Properties</a></div>
@@ -117,8 +119,6 @@
                   <ul>
                       <li><a href="#method_addAddonsToProject">addAddonsToProject</a></li>
                       <li><a href="#method_addAddonToProject">addAddonToProject</a></li>
-                      <li><a href="#method_addBowerPackagesToProject">addBowerPackagesToProject</a></li>
-                      <li><a href="#method_addBowerPackageToProject">addBowerPackageToProject</a></li>
                       <li><a href="#method_addPackagesToProject">addPackagesToProject</a></li>
                       <li><a href="#method_addPackageToProject">addPackageToProject</a></li>
                       <li><a href="#method_afterInstall">afterInstall</a></li>
@@ -161,8 +161,10 @@
                       <li><a href="#method__locals">_locals</a></li>
                       <li><a href="#method__normalizeEntityName">_normalizeEntityName</a></li>
                       <li><a href="#method__process">_process</a></li>
+                      <li><a href="#method__processOptions">_processOptions</a></li>
                       <li><a href="#method__writeFile">_writeFile</a></li>
                       <li><a href="#method__writeStatusToUI">_writeStatusToUI</a></li>
+                      <li><a href="#method_convertToJS">convertToJS</a></li>
                       <li><a href="#method_dir">dir</a></li>
                       <li><a href="#method_gatherConfirmationMessages">gatherConfirmationMessages</a></li>
                       <li><a href="#method_generateLookupPaths">generateLookupPaths</a></li>
@@ -174,6 +176,7 @@
                       <li><a href="#method_markIdenticalToBeSkipped">markIdenticalToBeSkipped</a></li>
                       <li><a href="#method_markToBeRemoved">markToBeRemoved</a></li>
                       <li><a href="#method_prepareConfirm">prepareConfirm</a></li>
+                      <li><a href="#method_shouldConvertToJS">shouldConvertToJS</a></li>
                       <li><a href="#method_supportsAddon">supportsAddon</a></li>
                   </ul>
               </div>
@@ -182,14 +185,14 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
 
         <div id="main" class="yui3-u">
             <div class="content"><div class="title">
-    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l30"><code>lib&#x2F;models&#x2F;blueprint.js:30</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l29"><code>lib&#x2F;models&#x2F;blueprint.js:29</code></a></span>
     <h1 class="class-name">Blueprint</h1>
 </div>
 
@@ -360,7 +363,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_load">load</a>(blueprintPath): <a href="../classes/Blueprint.html" class="crosslink">Blueprint</a>
+              <a href="#method_load">load</a>(blueprintPath, [blueprintOptions]): <a href="../classes/Blueprint.html" class="crosslink">Blueprint</a>
             </div>
             <div class="short-description">
               <p>Loads a blueprint from given path.</p>
@@ -479,7 +482,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_Blueprint">Blueprint</a>([blueprintPath])
+              <a href="#method_Blueprint">Blueprint</a>([blueprintPath], [blueprintOptions])
             </div>
             <div class="short-description">
               <p>A blueprint is a bundle of template files with optional install logic.</p>
@@ -495,6 +498,30 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
 
   <h2 id="property-summary">Property Summary</h2>
 
+    <table class="summary">
+      <thead>
+      <tr>
+        <th colspan="2">Public Properties</th>
+      </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            public
+            
+            
+          </td>
+          <td>
+            <div class="property-name ">
+              <a href="#props_shouldTransformTypeScript">shouldTransformTypeScript</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a>
+            </div>
+            <div class="short-description">
+              <p>Indicates whether or not a blueprint is a candidate for automatic transpilation from TS to JS. This property could be false in the case that the blueprint is written in JS and is not intended to work with TS at all, OR in the case that the blueprint is written in TS and the author does not intend to support transpilation to JS.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
 
     <table class="summary">
@@ -558,36 +585,6 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
             </div>
             <div class="short-description">
               <p>Used to add an addon to the project's <code>package.json</code> and run it's <code>defaultBlueprint</code> if it provides one.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            public
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
-              <a href="#method_addBowerPackagesToProject">addBowerPackagesToProject</a>(packages, installOptions): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
-            </div>
-            <div class="short-description">
-              <p>Used to add an array of packages to the projects <code>bower.json</code>.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            public
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
-              <a href="#method_addBowerPackageToProject">addBowerPackageToProject</a>(localPackageName, target, installOptions): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
-            </div>
-            <div class="short-description">
-              <p>Used to add a package to the projects <code>bower.json</code>.</p>
             </div>
           </td>
         </tr>
@@ -719,7 +716,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_files">files</a>( ): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a>
+              <a href="#method_files">files</a>(options): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a>
             </div>
             <div class="short-description">
               <p>Used to retrieve files for blueprint.</p>
@@ -947,7 +944,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
               <a href="#method_taskFor">taskFor</a>(dasherizedName)
             </div>
             <div class="short-description">
-              <p>Used to retrieve a task with the given name. Passes the new task the standard information available (like <code>ui</code>, <code>analytics</code>, <code>project</code>, etc).</p>
+              <p>Used to retrieve a task with the given name. Passes the new task the standard information available (like <code>ui</code>, <code>project</code>, etc).</p>
             </div>
           </td>
         </tr>
@@ -1165,6 +1162,21 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
           </td>
           <td>
             <div class="method-name ">
+              <a href="#method__processOptions">_processOptions</a>(options)
+            </div>
+            <div class="short-description">
+              <p>Process the options object coming from either the <code>init</code>, <code>install</code> or <code>uninstall</code> hook.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            private
+            
+            
+          </td>
+          <td>
+            <div class="method-name ">
               <a href="#method__writeFile">_writeFile</a>(info): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
             </div>
             <div class="short-description">
@@ -1184,6 +1196,21 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
             </div>
             <div class="short-description">
               <p>Write a status and message to the UI</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            private
+            
+            
+          </td>
+          <td>
+            <div class="method-name ">
+              <a href="#method_convertToJS">convertToJS</a>(fileInfo): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
+            </div>
+            <div class="short-description">
+              
             </div>
           </td>
         </tr>
@@ -1360,6 +1387,21 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
           </td>
           <td>
             <div class="method-name ">
+              <a href="#method_shouldConvertToJS">shouldConvertToJS</a>(options, fileInfo): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a>
+            </div>
+            <div class="short-description">
+              
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            private
+            
+            
+          </td>
+          <td>
+            <div class="method-name ">
               <a href="#method_supportsAddon">supportsAddon</a>( ): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a>
             </div>
             <div class="short-description">
@@ -1374,7 +1416,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
         <h2 id="static-public-properties">Static Public Properties</h2>
 <div class="property item">
   <div id="props_defaultLookupPaths" class="title">
-    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1401"><code>lib&#x2F;models&#x2F;blueprint.js:1401</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1524"><code>lib&#x2F;models&#x2F;blueprint.js:1524</code></a></span>
     <h3 class="">
       public
       static
@@ -1389,7 +1431,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
 </div>
 <div class="property item">
   <div id="props_ignoredFiles" class="title">
-    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1389"><code>lib&#x2F;models&#x2F;blueprint.js:1389</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1512"><code>lib&#x2F;models&#x2F;blueprint.js:1512</code></a></span>
     <h3 class="">
       public
       static
@@ -1404,7 +1446,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
 </div>
 <div class="property item">
   <div id="props_ignoredUpdateFiles" class="title">
-    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1395"><code>lib&#x2F;models&#x2F;blueprint.js:1395</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1518"><code>lib&#x2F;models&#x2F;blueprint.js:1518</code></a></span>
     <h3 class="">
       public
       static
@@ -1419,7 +1461,7 @@ See the built-in <code>resource</code> blueprint for an example of this.</p>
 </div>
 <div class="property item">
   <div id="props_renamedFiles" class="title">
-    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1374"><code>lib&#x2F;models&#x2F;blueprint.js:1374</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1497"><code>lib&#x2F;models&#x2F;blueprint.js:1497</code></a></span>
     <h3 class="">
       public
       static
@@ -1445,7 +1487,7 @@ The values are the filenames used in the target directory.</p>
         <h2 id="static-public-methods">Static Public Methods</h2>
 <div class="method item">
     <div id="method_list" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1325"><code>lib&#x2F;models&#x2F;blueprint.js:1325</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1448"><code>lib&#x2F;models&#x2F;blueprint.js:1448</code></a></span>
         <h3 class="">
             public
             static
@@ -1512,12 +1554,12 @@ The values are the filenames used in the target directory.</p>
 </div>
 <div class="method item">
     <div id="method_load" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1298"><code>lib&#x2F;models&#x2F;blueprint.js:1298</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1420"><code>lib&#x2F;models&#x2F;blueprint.js:1420</code></a></span>
         <h3 class="">
             public
             static
             
-            load(blueprintPath): <a href="../classes/Blueprint.html" class="crosslink">Blueprint</a>
+            load(blueprintPath, [blueprintOptions]): <a href="../classes/Blueprint.html" class="crosslink">Blueprint</a>
         </h3>
     </div>
 
@@ -1551,6 +1593,19 @@ The values are the filenames used in the target directory.</p>
               <td> </td>
             </tr>
 
+            <tr>
+              <td>blueprintOptions</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+              <td>
+                <ul>
+                  <li>optional</li>
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
           </tbody>
         </table>
       </div>
@@ -1568,7 +1623,7 @@ The values are the filenames used in the target directory.</p>
 </div>
 <div class="method item">
     <div id="method_lookup" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1268"><code>lib&#x2F;models&#x2F;blueprint.js:1268</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1379"><code>lib&#x2F;models&#x2F;blueprint.js:1379</code></a></span>
         <h3 class="">
             public
             static
@@ -1646,6 +1701,20 @@ The values are the filenames used in the target directory.</p>
 matching Blueprint could not be found</p>
 </td>
               </tr>
+              <tr>
+                <td>options.blueprintOptions</td>
+                <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+                <td>
+                  <ul>
+                    <li>optional</li>
+                    
+                    
+                  </ul>
+                </td>
+                <td><p>Options object that will be passed
+along to the Blueprint instance on creation.</p>
+</td>
+              </tr>
           </tbody>
         </table>
       </div>
@@ -1668,12 +1737,12 @@ matching Blueprint could not be found</p>
     <h2 id="public-constructors">Public Constructors</h2>
 <div class="method item">
     <div id="method_Blueprint" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l30"><code>lib&#x2F;models&#x2F;blueprint.js:30</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l29"><code>lib&#x2F;models&#x2F;blueprint.js:29</code></a></span>
         <h3 class="">
             public
             
             
-            Blueprint([blueprintPath])
+            Blueprint([blueprintPath], [blueprintOptions])
         </h3>
     </div>
 
@@ -1706,6 +1775,19 @@ matching Blueprint could not be found</p>
               <td> </td>
             </tr>
 
+            <tr>
+              <td>blueprintOptions</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+              <td>
+                <ul>
+                  <li>optional</li>
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
           </tbody>
         </table>
       </div>
@@ -1717,13 +1799,35 @@ matching Blueprint could not be found</p>
 
 
 
+    <div id="properties public">
+        <h2 id="public-properties">Public Properties</h2>
+<div class="property item public">
+  <div id="props_shouldTransformTypeScript" class="title">
+    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l198"><code>lib&#x2F;models&#x2F;blueprint.js:198</code></a></span>
+    <h3 class="">
+      public
+      
+      
+      shouldTransformTypeScript: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a>
+    </h3>
+  </div>
+
+
+  <div class="property-description"><p>Indicates whether or not a blueprint is a candidate for automatic transpilation from TS to JS.
+This property could be false in the case that the blueprint is written in JS and is not intended
+to work with TS at all, OR in the case that the blueprint is written in TS and the author does
+not intend to support transpilation to JS.</p>
+</div>
+
+</div>
+    </div>
 
 
     <div id="properties private">
         <h2 id="private-properties">Private Properties</h2>
 <div class="property item private">
   <div id="props__actions" class="title">
-    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l299"><code>lib&#x2F;models&#x2F;blueprint.js:299</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l330"><code>lib&#x2F;models&#x2F;blueprint.js:330</code></a></span>
     <h3 class="">
       private
       
@@ -1743,7 +1847,7 @@ matching Blueprint could not be found</p>
     <h2 id="public-methods">Public Methods</h2>
 <div class="method item">
     <div id="method_addAddonsToProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1083"><code>lib&#x2F;models&#x2F;blueprint.js:1083</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1164"><code>lib&#x2F;models&#x2F;blueprint.js:1164</code></a></span>
         <h3 class="">
             public
             
@@ -1802,7 +1906,7 @@ available.</p>
 </div>
 <div class="method item">
     <div id="method_addAddonToProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1063"><code>lib&#x2F;models&#x2F;blueprint.js:1063</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1144"><code>lib&#x2F;models&#x2F;blueprint.js:1144</code></a></span>
         <h3 class="">
             public
             
@@ -1860,175 +1964,8 @@ available.</p>
 
 </div>
 <div class="method item">
-    <div id="method_addBowerPackagesToProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1026"><code>lib&#x2F;models&#x2F;blueprint.js:1026</code></a></span>
-        <h3 class="">
-            public
-            
-            
-            addBowerPackagesToProject(packages, installOptions): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"><p>Used to add an array of packages to the projects <code>bower.json</code>.</p>
-<p>Generally, this would be done from the <code>afterInstall</code> hook, to
-ensure that a package that is required by a given blueprint is
-available.</p>
-<p>Expects each array item to be an object with a <code>name</code>.  Each object
-may optionally have a <code>target</code> to specify a specific version, or a
-<code>source</code> to specify a non-local name to be resolved.</p>
-</div>
-
-      <div class="params">
-        <h4>Parameters:</h4>
-        <table>
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Attribute</th>
-            <th>Description</th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>packages</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td> </td>
-            </tr>
-
-            <tr>
-              <td>installOptions</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td> </td>
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-
-      <div class="return">
-        <h4>Return:</h4>
-        <div>
-          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a></span>
-          <span class="return-description"></span>
-        </div>
-      </div>
-
-
-</div>
-<div class="method item">
-    <div id="method_addBowerPackageToProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l996"><code>lib&#x2F;models&#x2F;blueprint.js:996</code></a></span>
-        <h3 class="">
-            public
-            
-            
-            addBowerPackageToProject(localPackageName, target, installOptions): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"><p>Used to add a package to the projects <code>bower.json</code>.</p>
-<p>Generally, this would be done from the <code>afterInstall</code> hook, to
-ensure that a package that is required by a given blueprint is
-available.</p>
-<p><code>localPackageName</code> and <code>target</code> may be thought of as equivalent
-to the key-value pairs in the <code>dependency</code> or <code>devDepencency</code>
-objects contained within a bower.json file.</p>
-</div>
-
-      <div class="params">
-        <h4>Parameters:</h4>
-        <table>
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Attribute</th>
-            <th>Description</th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>localPackageName</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td> </td>
-            </tr>
-
-            <tr>
-              <td>target</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td> </td>
-            </tr>
-
-            <tr>
-              <td>installOptions</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td> </td>
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-
-      <div class="return">
-        <h4>Return:</h4>
-        <div>
-          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a></span>
-          <span class="return-description"></span>
-        </div>
-      </div>
-
-
-      <h4>Example:</h4>
-      <pre class="code prettyprint"><code class="language-js">addBowerPackageToProject('jquery', '~1.11.1');
-addBowerPackageToProject('old_jquery', 'jquery#~1.9.1');
-addBowerPackageToProject('bootstrap-3', 'https://twitter.github.io/bootstrap/assets/bootstrap');
-</code></pre>
-
-</div>
-<div class="method item">
     <div id="method_addPackagesToProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l889"><code>lib&#x2F;models&#x2F;blueprint.js:889</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1037"><code>lib&#x2F;models&#x2F;blueprint.js:1037</code></a></span>
         <h3 class="">
             public
             
@@ -2095,7 +2032,7 @@ may optionally have a <code>target</code> to specify a specific version.</p>
 </div>
 <div class="method item">
     <div id="method_addPackageToProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l867"><code>lib&#x2F;models&#x2F;blueprint.js:867</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1015"><code>lib&#x2F;models&#x2F;blueprint.js:1015</code></a></span>
         <h3 class="">
             public
             
@@ -2166,7 +2103,7 @@ available.</p>
 </div>
 <div class="method item">
     <div id="method_afterInstall" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l500"><code>lib&#x2F;models&#x2F;blueprint.js:500</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l599"><code>lib&#x2F;models&#x2F;blueprint.js:599</code></a></span>
         <h3 class="">
             public
             
@@ -2193,7 +2130,7 @@ available.</p>
 </div>
 <div class="method item">
     <div id="method_afterUninstall" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l514"><code>lib&#x2F;models&#x2F;blueprint.js:514</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l613"><code>lib&#x2F;models&#x2F;blueprint.js:613</code></a></span>
         <h3 class="">
             public
             
@@ -2220,7 +2157,7 @@ available.</p>
 </div>
 <div class="method item">
     <div id="method_beforeInstall" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l493"><code>lib&#x2F;models&#x2F;blueprint.js:493</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l592"><code>lib&#x2F;models&#x2F;blueprint.js:592</code></a></span>
         <h3 class="">
             public
             
@@ -2247,7 +2184,7 @@ available.</p>
 </div>
 <div class="method item">
     <div id="method_beforeUninstall" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l507"><code>lib&#x2F;models&#x2F;blueprint.js:507</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l606"><code>lib&#x2F;models&#x2F;blueprint.js:606</code></a></span>
         <h3 class="">
             public
             
@@ -2274,7 +2211,7 @@ available.</p>
 </div>
 <div class="method item">
     <div id="method_buildFileInfo" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l657"><code>lib&#x2F;models&#x2F;blueprint.js:657</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l756"><code>lib&#x2F;models&#x2F;blueprint.js:756</code></a></span>
         <h3 class="">
             public
             
@@ -2354,7 +2291,7 @@ available.</p>
 </div>
 <div class="method item public">
     <div id="method_fileMapTokens" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l558"><code>lib&#x2F;models&#x2F;blueprint.js:558</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l657"><code>lib&#x2F;models&#x2F;blueprint.js:657</code></a></span>
         <h3 class="">
             public
             
@@ -2395,12 +2332,12 @@ values when the <code>mapFile</code> method is called.</p>
 </div>
 <div class="method item public">
     <div id="method_files" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l222"><code>lib&#x2F;models&#x2F;blueprint.js:222</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l252"><code>lib&#x2F;models&#x2F;blueprint.js:252</code></a></span>
         <h3 class="">
             public
             
             
-            files( ): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a>
+            files(options): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a>
         </h3>
     </div>
 
@@ -2409,6 +2346,34 @@ values when the <code>mapFile</code> method is called.</p>
     <div class="method-description"><p>Used to retrieve files for blueprint.</p>
 </div>
 
+      <div class="params">
+        <h4>Parameters:</h4>
+        <table>
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>options</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+              <td>
+                <ul>
+                  
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
 
       <div class="return">
         <h4>Return:</h4>
@@ -2423,7 +2388,7 @@ values when the <code>mapFile</code> method is called.</p>
 </div>
 <div class="method item public">
     <div id="method_filesPath" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l205"><code>lib&#x2F;models&#x2F;blueprint.js:205</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l235"><code>lib&#x2F;models&#x2F;blueprint.js:235</code></a></span>
         <h3 class="">
             public
             
@@ -2483,7 +2448,7 @@ blueprint's folder.</p>
 </div>
 <div class="method item">
     <div id="method_generateFileMap" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l642"><code>lib&#x2F;models&#x2F;blueprint.js:642</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l741"><code>lib&#x2F;models&#x2F;blueprint.js:741</code></a></span>
         <h3 class="">
             public
             
@@ -2538,7 +2503,7 @@ blueprint's folder.</p>
 </div>
 <div class="method item">
     <div id="method_insertIntoFile" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1147"><code>lib&#x2F;models&#x2F;blueprint.js:1147</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1258"><code>lib&#x2F;models&#x2F;blueprint.js:1258</code></a></span>
         <h3 class="">
             public
             
@@ -2561,11 +2526,11 @@ no change will be made.</p>
 will be inserted at the end of the file.</p>
 <p>Example:</p>
 <pre class="code prettyprint"><code>// app/router.js
-Router.map(function() {
+Router.map(function () {
 });
 </code></pre>
 <pre class="code prettyprint"><code>insertIntoFile('app/router.js', '  this.route("admin");', {
-  after: 'Router.map(function() {' + EOL
+  after: 'Router.map(function () {' + EOL
 }).then(function() {
   // file has been inserted into!
 });
@@ -2573,7 +2538,7 @@ Router.map(function() {
 
 </code></pre>
 <pre class="code prettyprint"><code>// app/router.js
-Router.map(function() {
+Router.map(function () {
   this.route("admin");
 });
 </code></pre>
@@ -2646,7 +2611,7 @@ Router.map(function() {
 </div>
 <div class="method item">
     <div id="method_install" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l438"><code>lib&#x2F;models&#x2F;blueprint.js:438</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l543"><code>lib&#x2F;models&#x2F;blueprint.js:543</code></a></span>
         <h3 class="">
             public
             
@@ -2700,7 +2665,7 @@ Router.map(function() {
 </div>
 <div class="method item">
     <div id="method_isUpdate" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l678"><code>lib&#x2F;models&#x2F;blueprint.js:678</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l777"><code>lib&#x2F;models&#x2F;blueprint.js:777</code></a></span>
         <h3 class="">
             public
             
@@ -2726,7 +2691,7 @@ Router.map(function() {
 </div>
 <div class="method item public">
     <div id="method_locals" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l523"><code>lib&#x2F;models&#x2F;blueprint.js:523</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l622"><code>lib&#x2F;models&#x2F;blueprint.js:622</code></a></span>
         <h3 class="">
             public
             
@@ -2800,7 +2765,7 @@ The resolved object will be merged with the aforementioned default locals.</p>
 </div>
 <div class="method item public">
     <div id="method_lookupBlueprint" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1251"><code>lib&#x2F;models&#x2F;blueprint.js:1251</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1362"><code>lib&#x2F;models&#x2F;blueprint.js:1362</code></a></span>
         <h3 class="">
             public
             
@@ -2855,7 +2820,7 @@ The resolved object will be merged with the aforementioned default locals.</p>
 </div>
 <div class="method item">
     <div id="method_mapFile" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l775"><code>lib&#x2F;models&#x2F;blueprint.js:775</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l923"><code>lib&#x2F;models&#x2F;blueprint.js:923</code></a></span>
         <h3 class="">
             public
             
@@ -2922,7 +2887,7 @@ The resolved object will be merged with the aforementioned default locals.</p>
 </div>
 <div class="method item public">
     <div id="method_normalizeEntityName" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l253"><code>lib&#x2F;models&#x2F;blueprint.js:253</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l284"><code>lib&#x2F;models&#x2F;blueprint.js:284</code></a></span>
         <h3 class="">
             public
             
@@ -2983,7 +2948,7 @@ returned by this hook will be used as the new entity name.</p>
 </div>
 <div class="method item">
     <div id="method_processFiles" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l740"><code>lib&#x2F;models&#x2F;blueprint.js:740</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l839"><code>lib&#x2F;models&#x2F;blueprint.js:839</code></a></span>
         <h3 class="">
             public
             
@@ -3050,7 +3015,7 @@ returned by this hook will be used as the new entity name.</p>
 </div>
 <div class="method item">
     <div id="method_processFilesForUninstall" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l762"><code>lib&#x2F;models&#x2F;blueprint.js:762</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l872"><code>lib&#x2F;models&#x2F;blueprint.js:872</code></a></span>
         <h3 class="">
             public
             
@@ -3110,7 +3075,7 @@ returned by this hook will be used as the new entity name.</p>
 </div>
 <div class="method item">
     <div id="method_removePackageFromProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l938"><code>lib&#x2F;models&#x2F;blueprint.js:938</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1086"><code>lib&#x2F;models&#x2F;blueprint.js:1086</code></a></span>
         <h3 class="">
             public
             
@@ -3168,7 +3133,7 @@ addon is used.</p>
 </div>
 <div class="method item">
     <div id="method_removePackagesFromProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l955"><code>lib&#x2F;models&#x2F;blueprint.js:955</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1103"><code>lib&#x2F;models&#x2F;blueprint.js:1103</code></a></span>
         <h3 class="">
             public
             
@@ -3227,7 +3192,7 @@ addon is used.</p>
 </div>
 <div class="method item">
     <div id="method_srcPath" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l244"><code>lib&#x2F;models&#x2F;blueprint.js:244</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l275"><code>lib&#x2F;models&#x2F;blueprint.js:275</code></a></span>
         <h3 class="">
             public
             
@@ -3282,7 +3247,7 @@ addon is used.</p>
 </div>
 <div class="method item public">
     <div id="method_taskFor" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1129"><code>lib&#x2F;models&#x2F;blueprint.js:1129</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1241"><code>lib&#x2F;models&#x2F;blueprint.js:1241</code></a></span>
         <h3 class="">
             public
             
@@ -3294,7 +3259,7 @@ addon is used.</p>
 
 
     <div class="method-description"><p>Used to retrieve a task with the given name. Passes the new task
-the standard information available (like <code>ui</code>, <code>analytics</code>, <code>project</code>, etc).</p>
+the standard information available (like <code>ui</code>, <code>project</code>, etc).</p>
 </div>
 
       <div class="params">
@@ -3331,7 +3296,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item">
     <div id="method_uninstall" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l468"><code>lib&#x2F;models&#x2F;blueprint.js:468</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l570"><code>lib&#x2F;models&#x2F;blueprint.js:570</code></a></span>
         <h3 class="">
             public
             
@@ -3390,7 +3355,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
         <h2 id="private-methods">Private Methods</h2>
 <div class="method item private">
     <div id="method__checkForNoMatch" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l726"><code>lib&#x2F;models&#x2F;blueprint.js:726</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l825"><code>lib&#x2F;models&#x2F;blueprint.js:825</code></a></span>
         <h3 class="">
             private
             
@@ -3450,7 +3415,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__checkForPod" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l355"><code>lib&#x2F;models&#x2F;blueprint.js:355</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l386"><code>lib&#x2F;models&#x2F;blueprint.js:386</code></a></span>
         <h3 class="">
             private
             
@@ -3470,7 +3435,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__checkInRepoAddonExists" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l383"><code>lib&#x2F;models&#x2F;blueprint.js:383</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l414"><code>lib&#x2F;models&#x2F;blueprint.js:414</code></a></span>
         <h3 class="">
             private
             
@@ -3517,7 +3482,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__commit" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l337"><code>lib&#x2F;models&#x2F;blueprint.js:337</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l368"><code>lib&#x2F;models&#x2F;blueprint.js:368</code></a></span>
         <h3 class="">
             private
             
@@ -3580,7 +3545,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__fileMapTokens" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l586"><code>lib&#x2F;models&#x2F;blueprint.js:586</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l685"><code>lib&#x2F;models&#x2F;blueprint.js:685</code></a></span>
         <h3 class="">
             private
             
@@ -3634,7 +3599,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__generateFileMapVariables" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l804"><code>lib&#x2F;models&#x2F;blueprint.js:804</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l952"><code>lib&#x2F;models&#x2F;blueprint.js:952</code></a></span>
         <h3 class="">
             private
             
@@ -3714,7 +3679,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__getFileInfos" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l688"><code>lib&#x2F;models&#x2F;blueprint.js:688</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l787"><code>lib&#x2F;models&#x2F;blueprint.js:787</code></a></span>
         <h3 class="">
             private
             
@@ -3795,7 +3760,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__getFilesForInstall" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l713"><code>lib&#x2F;models&#x2F;blueprint.js:713</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l812"><code>lib&#x2F;models&#x2F;blueprint.js:812</code></a></span>
         <h3 class="">
             private
             
@@ -3850,7 +3815,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__ignoreUpdateFiles" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l700"><code>lib&#x2F;models&#x2F;blueprint.js:700</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l799"><code>lib&#x2F;models&#x2F;blueprint.js:799</code></a></span>
         <h3 class="">
             private
             
@@ -3870,7 +3835,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__locals" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l834"><code>lib&#x2F;models&#x2F;blueprint.js:834</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l982"><code>lib&#x2F;models&#x2F;blueprint.js:982</code></a></span>
         <h3 class="">
             private
             
@@ -3924,7 +3889,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__normalizeEntityName" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l372"><code>lib&#x2F;models&#x2F;blueprint.js:372</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l403"><code>lib&#x2F;models&#x2F;blueprint.js:403</code></a></span>
         <h3 class="">
             private
             
@@ -3971,7 +3936,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__process" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l412"><code>lib&#x2F;models&#x2F;blueprint.js:412</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l443"><code>lib&#x2F;models&#x2F;blueprint.js:443</code></a></span>
         <h3 class="">
             private
             
@@ -4056,8 +4021,57 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 
 </div>
 <div class="method item private">
+    <div id="method__processOptions" class="title">
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l219"><code>lib&#x2F;models&#x2F;blueprint.js:219</code></a></span>
+        <h3 class="">
+            private
+            
+            
+            _processOptions(options)
+        </h3>
+    </div>
+
+
+
+    <div class="method-description"><p>Process the options object coming from either
+the <code>init</code>, <code>install</code> or <code>uninstall</code> hook.</p>
+</div>
+
+      <div class="params">
+        <h4>Parameters:</h4>
+        <table>
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>options</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+              <td>
+                <ul>
+                  
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+
+
+</div>
+<div class="method item private">
     <div id="method__writeFile" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l287"><code>lib&#x2F;models&#x2F;blueprint.js:287</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l318"><code>lib&#x2F;models&#x2F;blueprint.js:318</code></a></span>
         <h3 class="">
             private
             
@@ -4111,7 +4125,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method__writeStatusToUI" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l273"><code>lib&#x2F;models&#x2F;blueprint.js:273</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l304"><code>lib&#x2F;models&#x2F;blueprint.js:304</code></a></span>
         <h3 class="">
             private
             
@@ -4184,8 +4198,62 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 
 </div>
 <div class="method item private">
+    <div id="method_convertToJS" class="title">
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l523"><code>lib&#x2F;models&#x2F;blueprint.js:523</code></a></span>
+        <h3 class="">
+            private
+            
+            
+            convertToJS(fileInfo): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a>
+        </h3>
+    </div>
+
+
+
+    <div class="method-description"></div>
+
+      <div class="params">
+        <h4>Parameters:</h4>
+        <table>
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>fileInfo</td>
+              <td>FileInfo</td>
+              <td>
+                <ul>
+                  
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="return">
+        <h4>Return:</h4>
+        <div>
+          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" class="crosslink external" target="_blank">Promise</a></span>
+          <span class="return-description"></span>
+        </div>
+      </div>
+
+
+</div>
+<div class="method item private">
     <div id="method_dir" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1546"><code>lib&#x2F;models&#x2F;blueprint.js:1546</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1669"><code>lib&#x2F;models&#x2F;blueprint.js:1669</code></a></span>
         <h3 class="">
             private
             
@@ -4212,7 +4280,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method_gatherConfirmationMessages" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1442"><code>lib&#x2F;models&#x2F;blueprint.js:1442</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1565"><code>lib&#x2F;models&#x2F;blueprint.js:1565</code></a></span>
         <h3 class="">
             private
             
@@ -4279,7 +4347,7 @@ the standard information available (like <code>ui</code>, <code>analytics</code>
 </div>
 <div class="method item private">
     <div id="method_generateLookupPaths" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1468"><code>lib&#x2F;models&#x2F;blueprint.js:1468</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1591"><code>lib&#x2F;models&#x2F;blueprint.js:1591</code></a></span>
         <h3 class="">
             private
             
@@ -4335,7 +4403,7 @@ duplicates.</p>
 </div>
 <div class="method item private">
     <div id="method_getDetailedHelpPath" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1559"><code>lib&#x2F;models&#x2F;blueprint.js:1559</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1682"><code>lib&#x2F;models&#x2F;blueprint.js:1682</code></a></span>
         <h3 class="">
             private
             
@@ -4390,7 +4458,7 @@ duplicates.</p>
 </div>
 <div class="method item private">
     <div id="method_hasPathToken" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1483"><code>lib&#x2F;models&#x2F;blueprint.js:1483</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1606"><code>lib&#x2F;models&#x2F;blueprint.js:1606</code></a></span>
         <h3 class="">
             private
             
@@ -4446,7 +4514,7 @@ the blueprint to support pod tokens.</p>
 </div>
 <div class="method item private">
     <div id="method_isFilePath" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1536"><code>lib&#x2F;models&#x2F;blueprint.js:1536</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1659"><code>lib&#x2F;models&#x2F;blueprint.js:1659</code></a></span>
         <h3 class="">
             private
             
@@ -4500,7 +4568,7 @@ the blueprint to support pod tokens.</p>
 </div>
 <div class="method item private">
     <div id="method_isIgnored" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1456"><code>lib&#x2F;models&#x2F;blueprint.js:1456</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1579"><code>lib&#x2F;models&#x2F;blueprint.js:1579</code></a></span>
         <h3 class="">
             private
             
@@ -4554,7 +4622,7 @@ the blueprint to support pod tokens.</p>
 </div>
 <div class="method item private">
     <div id="method_isValidFile" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1522"><code>lib&#x2F;models&#x2F;blueprint.js:1522</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1645"><code>lib&#x2F;models&#x2F;blueprint.js:1645</code></a></span>
         <h3 class="">
             private
             
@@ -4608,7 +4676,7 @@ the blueprint to support pod tokens.</p>
 </div>
 <div class="method item private">
     <div id="method_markIdenticalToBeSkipped" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1422"><code>lib&#x2F;models&#x2F;blueprint.js:1422</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1545"><code>lib&#x2F;models&#x2F;blueprint.js:1545</code></a></span>
         <h3 class="">
             private
             
@@ -4655,7 +4723,7 @@ the blueprint to support pod tokens.</p>
 </div>
 <div class="method item private">
     <div id="method_markToBeRemoved" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1433"><code>lib&#x2F;models&#x2F;blueprint.js:1433</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1556"><code>lib&#x2F;models&#x2F;blueprint.js:1556</code></a></span>
         <h3 class="">
             private
             
@@ -4702,7 +4770,7 @@ the blueprint to support pod tokens.</p>
 </div>
 <div class="method item private">
     <div id="method_prepareConfirm" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1409"><code>lib&#x2F;models&#x2F;blueprint.js:1409</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l1532"><code>lib&#x2F;models&#x2F;blueprint.js:1532</code></a></span>
         <h3 class="">
             private
             
@@ -4755,8 +4823,75 @@ the blueprint to support pod tokens.</p>
 
 </div>
 <div class="method item private">
+    <div id="method_shouldConvertToJS" class="title">
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l469"><code>lib&#x2F;models&#x2F;blueprint.js:469</code></a></span>
+        <h3 class="">
+            private
+            
+            
+            shouldConvertToJS(options, fileInfo): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a>
+        </h3>
+    </div>
+
+
+
+    <div class="method-description"></div>
+
+      <div class="params">
+        <h4>Parameters:</h4>
+        <table>
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>options</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></td>
+              <td>
+                <ul>
+                  
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
+            <tr>
+              <td>fileInfo</td>
+              <td>FileInfo</td>
+              <td>
+                <ul>
+                  
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="return">
+        <h4>Return:</h4>
+        <div>
+          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
+          <span class="return-description"></span>
+        </div>
+      </div>
+
+
+</div>
+<div class="method item private">
     <div id="method_supportsAddon" class="title">
-        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l792"><code>lib&#x2F;models&#x2F;blueprint.js:792</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_blueprint.js.html#l940"><code>lib&#x2F;models&#x2F;blueprint.js:940</code></a></span>
         <h3 class="">
             private
             

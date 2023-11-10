@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -89,7 +87,7 @@ const isGitRepo = require(&#x27;is-git-url&#x27;);
 const camelize = require(&#x27;ember-cli-string-utils&#x27;).camelize;
 const getCallerFile = require(&#x27;get-caller-file&#x27;);
 const printCommand = require(&#x27;../utilities/print-command&#x27;);
-const _ = require(&#x27;ember-cli-lodash-subset&#x27;);
+const { union, defaults, uniq, uniqBy, reject } = require(&#x27;ember-cli-lodash-subset&#x27;);
 const EOL = require(&#x27;os&#x27;).EOL;
 const CoreObject = require(&#x27;core-object&#x27;);
 const logger = require(&#x27;heimdalljs-logger&#x27;)(&#x27;ember-cli:command&#x27;);
@@ -97,7 +95,7 @@ const WatchDetector = require(&#x27;watch-detector&#x27;);
 const SilentError = require(&#x27;silent-error&#x27;);
 const execSync = require(&#x27;child_process&#x27;).execSync;
 const fs = require(&#x27;fs&#x27;);
-const isYarnProject = require(&#x27;../utilities/is-yarn-project&#x27;);
+const { determineInstallCommand } = require(&#x27;../utilities/package-managers&#x27;);
 
 let cache = {};
 
@@ -209,7 +207,6 @@ let Command = CoreObject.extend({
      *   { name: &#x27;verbose&#x27;,    type: Boolean, default: false, aliases: [&#x27;v&#x27;] },
      *   { name: &#x27;blueprint&#x27;,  type: String,  default: &#x27;app&#x27;, aliases: [&#x27;b&#x27;] },
      *   { name: &#x27;skip-npm&#x27;,   type: Boolean, default: false, aliases: [&#x27;sn&#x27;] },
-     *   { name: &#x27;skip-bower&#x27;, type: Boolean, default: false, aliases: [&#x27;sb&#x27;] },
      *   { name: &#x27;skip-git&#x27;,   type: Boolean, default: false, aliases: [&#x27;sg&#x27;] },
      *   { name: &#x27;directory&#x27;,  type: String ,                 aliases: [&#x27;dir&#x27;] }
      * ],
@@ -245,12 +242,12 @@ let Command = CoreObject.extend({
     let extendedAvailableOptions = (options &amp;&amp; options.availableOptions) || [];
     let extendedAnonymousOptions = (options &amp;&amp; options.anonymousOptions) || [];
 
-    this.anonymousOptions = _.union(this.anonymousOptions.slice(0), extendedAnonymousOptions);
+    this.anonymousOptions = union(this.anonymousOptions.slice(0), extendedAnonymousOptions);
 
     // merge any availableOptions
-    this.availableOptions = _.union(this.availableOptions.slice(0), extendedAvailableOptions);
+    this.availableOptions = union(this.availableOptions.slice(0), extendedAvailableOptions);
 
-    let optionKeys = _.uniq(_.map(this.availableOptions, &#x27;name&#x27;));
+    let optionKeys = uniq(this.availableOptions.map((option) =&gt; option.name));
 
     optionKeys.map(this.mergeDuplicateOption.bind(this));
 
@@ -272,7 +269,7 @@ let Command = CoreObject.extend({
     } else {
       // interrupt all external commands which don&#x27;t use &#x60;runTask()&#x60; with an error
 
-      // eslint-disable-next-line no-process-exit
+      // eslint-disable-next-line n/no-process-exit
       process.exit(1);
     }
   },
@@ -280,7 +277,6 @@ let Command = CoreObject.extend({
   _env(/* name */) {
     return {
       ui: this.ui,
-      analytics: this.analytics,
       project: this.project,
       testing: this.testing,
       settings: this.settings,
@@ -340,65 +336,60 @@ let Command = CoreObject.extend({
     @method validateAndRun
     @return {Promise}
   */
-  validateAndRun(args) {
-    return new Promise((resolve, reject) =&gt; {
-      let commandOptions = this.parseArgs(args);
-      // if the help option was passed, resolve with &#x27;callHelp&#x27; to call help command
-      if (commandOptions &amp;&amp; (commandOptions.options.help || commandOptions.options.h)) {
-        logger.info(&#x60;${this.name} called with help option&#x60;);
-        return resolve(&#x27;callHelp&#x27;);
-      }
+  async validateAndRun(args) {
+    let commandOptions = this.parseArgs(args);
 
-      this.analytics.track({
-        name: &#x27;ember &#x27;,
-        message: this.name,
-      });
+    // If the &#x60;help&#x60; option was passed, resolve with &#x60;callHelp&#x60; to call the &#x60;help&#x60; command:
+    if (commandOptions &amp;&amp; (commandOptions.options.help || commandOptions.options.h)) {
+      logger.info(&#x60;${this.name} called with help option&#x60;);
 
-      if (commandOptions === null) {
-        return reject();
-      }
+      return &#x27;callHelp&#x27;;
+    }
 
-      if (this.works === &#x27;outsideProject&#x27; &amp;&amp; this.isWithinProject) {
-        throw new SilentError(&#x60;You cannot use the ${chalk.green(this.name)} command inside an ember-cli project.&#x60;);
-      }
+    if (commandOptions === null) {
+      throw new SilentError();
+    }
 
-      if (this.works === &#x27;insideProject&#x27;) {
-        if (!this.project.hasDependencies()) {
-          if (!this.isWithinProject &amp;&amp; !this.project.isEmberCLIAddon()) {
-            throw new SilentError(
-              &#x60;You have to be inside an ember-cli project to use the ${chalk.green(this.name)} command.&#x60;
-            );
-          }
+    if (this.works === &#x27;outsideProject&#x27; &amp;&amp; this.isWithinProject) {
+      throw new SilentError(&#x60;You cannot use the ${chalk.green(this.name)} command inside an ember-cli project.&#x60;);
+    }
 
-          let installInstuction = &#x27;&#x60;npm install&#x60;&#x27;;
-          if (isYarnProject(this.project.root)) {
-            installInstuction = &#x27;&#x60;yarn install&#x60;&#x27;;
-          }
+    if (this.works === &#x27;insideProject&#x27;) {
+      if (!this.project.hasDependencies()) {
+        if (!this.isWithinProject &amp;&amp; !this.project.isEmberCLIAddon()) {
           throw new SilentError(
-            &#x60;Required packages are missing, run ${installInstuction} from this directory to install them.&#x60;
+            &#x60;You have to be inside an ember-cli project to use the ${chalk.green(this.name)} command.&#x60;
           );
         }
+
+        let installCommand = await determineInstallCommand(this.project.root);
+
+        throw new SilentError(
+          &#x60;Required packages are missing, run \&#x60;${installCommand}\&#x60; from this directory to install them.&#x60;
+        );
       }
+    }
 
-      let detector = new WatchDetector({
-        ui: this.ui,
-        childProcess: { execSync },
-        fs,
-        watchmanSupportsPlatform: /^win/.test(process.platform),
-        cache,
-        root: this.project.root,
-      });
-
-      let options = commandOptions.options;
-
-      if (this.hasOption(&#x27;watcher&#x27;)) {
-        // do stuff to try and provide a good experience when it comes to file watching
-        let watchPreference = detector.findBestWatcherOption(options);
-        this.project._watchmanInfo = watchPreference.watchmanInfo;
-        options.watcher = watchPreference.watcher;
-      }
-      resolve(this.run(options, commandOptions.args));
+    let detector = new WatchDetector({
+      ui: this.ui,
+      childProcess: { execSync },
+      fs,
+      watchmanSupportsPlatform: /^win/.test(process.platform),
+      cache,
+      root: this.project.root,
     });
+
+    let options = commandOptions.options;
+
+    if (this.hasOption(&#x27;watcher&#x27;)) {
+      // Do stuff to try and provide a good experience when it comes to file watching:
+      let watchPreference = detector.findBestWatcherOption(options);
+
+      this.project._watchmanInfo = watchPreference.watchmanInfo;
+      options.watcher = watchPreference.watcher;
+    }
+
+    return this.run(options, commandOptions.args);
   },
 
   /**
@@ -427,23 +418,17 @@ let Command = CoreObject.extend({
   mergeDuplicateOption(key) {
     let duplicateOptions, mergedOption, mergedAliases;
     // get duplicates to merge
-    duplicateOptions = _.filter(this.availableOptions, { name: key });
+    duplicateOptions = this.availableOptions.filter((option) =&gt; option.name === key);
 
     if (duplicateOptions.length &gt; 1) {
       // TODO: warn on duplicates and overwriting
-      mergedAliases = [];
-
-      _.map(duplicateOptions, &#x27;aliases&#x27;).map((alias) =&gt; {
-        alias.map((a) =&gt; {
-          mergedAliases.push(a);
-        });
-      });
+      mergedAliases = duplicateOptions.flatMap((option) =&gt; option.aliases);
 
       // merge duplicate options
       mergedOption = Object.assign.apply(null, duplicateOptions);
 
       // replace aliases with unique aliases
-      mergedOption.aliases = _.uniqBy(mergedAliases, (alias) =&gt; {
+      mergedOption.aliases = uniqBy(mergedAliases, (alias) =&gt; {
         if (typeof alias === &#x27;object&#x27;) {
           return alias[Object.keys(alias)[0]];
         }
@@ -451,9 +436,10 @@ let Command = CoreObject.extend({
       });
 
       // remove duplicates from options
-      this.availableOptions = _.reject(this.availableOptions, { name: key });
+      this.availableOptions = reject(this.availableOptions, { name: key });
       this.availableOptions.push(mergedOption);
     }
+
     return this.availableOptions;
   },
 
@@ -671,7 +657,7 @@ let Command = CoreObject.extend({
     Object.keys(parsedOptions).map(validateParsed.bind(this));
 
     return {
-      options: _.defaults(commandOptions, this.settings),
+      options: defaults(commandOptions, this.settings),
       args: parsedOptions.argv.remain,
     };
   },

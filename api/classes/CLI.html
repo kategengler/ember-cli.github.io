@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -95,7 +93,6 @@
             
                   <div><a href="#private-properties">Private Properties</a></div>
                   <ul>
-                      <li><a href="#props_analytics">analytics</a></li>
                       <li><a href="#props_disableDependencyChecker">disableDependencyChecker</a></li>
                       <li><a href="#props_instrumentation">instrumentation</a></li>
                       <li><a href="#props_name">name</a></li>
@@ -120,7 +117,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -181,21 +178,6 @@
       </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>
-            private
-            
-            
-          </td>
-          <td>
-            <div class="property-name ">
-              <a href="#props_analytics">analytics</a>: Unknown
-            </div>
-            <div class="short-description">
-              
-            </div>
-          </td>
-        </tr>
         <tr>
           <td>
             private
@@ -442,23 +424,8 @@
     <div id="properties private">
         <h2 id="private-properties">Private Properties</h2>
 <div class="property item private">
-  <div id="props_analytics" class="title">
-    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l35"><code>lib&#x2F;cli&#x2F;cli.js:35</code></a></span>
-    <h3 class="">
-      private
-      
-      
-      analytics: Unknown
-    </h3>
-  </div>
-
-
-  <div class="property-description"></div>
-
-</div>
-<div class="property item private">
   <div id="props_disableDependencyChecker" class="title">
-    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l48"><code>lib&#x2F;cli&#x2F;cli.js:48</code></a></span>
+    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l42"><code>lib&#x2F;cli&#x2F;cli.js:42</code></a></span>
     <h3 class="">
       private
       
@@ -473,7 +440,7 @@
 </div>
 <div class="property item private">
   <div id="props_instrumentation" class="title">
-    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l67"><code>lib&#x2F;cli&#x2F;cli.js:67</code></a></span>
+    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l61"><code>lib&#x2F;cli&#x2F;cli.js:61</code></a></span>
     <h3 class="">
       private
       
@@ -503,7 +470,7 @@
 </div>
 <div class="property item private">
   <div id="props_npmPackage" class="title">
-    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l61"><code>lib&#x2F;cli&#x2F;cli.js:61</code></a></span>
+    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l55"><code>lib&#x2F;cli&#x2F;cli.js:55</code></a></span>
     <h3 class="">
       private
       
@@ -518,7 +485,7 @@
 </div>
 <div class="property item private">
   <div id="props_root" class="title">
-    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l55"><code>lib&#x2F;cli&#x2F;cli.js:55</code></a></span>
+    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l49"><code>lib&#x2F;cli&#x2F;cli.js:49</code></a></span>
     <h3 class="">
       private
       
@@ -533,7 +500,7 @@
 </div>
 <div class="property item private">
   <div id="props_testing" class="title">
-    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l41"><code>lib&#x2F;cli&#x2F;cli.js:41</code></a></span>
+    <span class="source-link"><a href="../files/lib_cli_cli.js.html#l35"><code>lib&#x2F;cli&#x2F;cli.js:35</code></a></span>
     <h3 class="">
       private
       
@@ -569,7 +536,7 @@
         <h2 id="private-methods">Private Methods</h2>
 <div class="method item private">
     <div id="method_callHelp" class="title">
-        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l262"><code>lib&#x2F;cli&#x2F;cli.js:262</code></a></span>
+        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l224"><code>lib&#x2F;cli&#x2F;cli.js:224</code></a></span>
         <h3 class="">
             private
             
@@ -623,7 +590,7 @@
 </div>
 <div class="method item private">
     <div id="method_logError" class="title">
-        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l303"><code>lib&#x2F;cli&#x2F;cli.js:303</code></a></span>
+        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l264"><code>lib&#x2F;cli&#x2F;cli.js:264</code></a></span>
         <h3 class="">
             private
             
@@ -677,7 +644,7 @@
 </div>
 <div class="method item private">
     <div id="method_maybeMakeCommand" class="title">
-        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l83"><code>lib&#x2F;cli&#x2F;cli.js:83</code></a></span>
+        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l77"><code>lib&#x2F;cli&#x2F;cli.js:77</code></a></span>
         <h3 class="">
             private
             
@@ -744,7 +711,7 @@
 </div>
 <div class="method item private">
     <div id="method_run" class="title">
-        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l122"><code>lib&#x2F;cli&#x2F;cli.js:122</code></a></span>
+        <span class="source-link"><a href="../files/lib_cli_cli.js.html#l115"><code>lib&#x2F;cli&#x2F;cli.js:115</code></a></span>
         <h3 class="">
             private
             

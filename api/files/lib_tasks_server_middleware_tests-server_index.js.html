@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -90,7 +88,7 @@ const logger = require(&#x27;heimdalljs-logger&#x27;)(&#x27;ember-cli:test-serve
 module.exports = class TestsServerAddon {
   /**
    * This addon is used to serve the QUnit or Mocha test runner
-   * at &#x60;baseURL + &#x27;/tests&#x27;&#x60;.
+   * at &#x60;rootURL + &#x27;/tests&#x27;&#x60;.
    *
    * @class TestsServerAddon
    * @constructor
@@ -104,9 +102,8 @@ module.exports = class TestsServerAddon {
     let app = config.app;
     let options = config.options;
     let watcher = options.watcher;
-
-    let baseURL = options.rootURL === &#x27;&#x27; ? &#x27;/&#x27; : cleanBaseURL(options.rootURL || options.baseURL);
-    let testsPath = &#x60;${baseURL}tests&#x60;;
+    let rootURL = options.rootURL === &#x27;&#x27; ? &#x27;/&#x27; : cleanBaseURL(options.rootURL);
+    let testsPath = &#x60;${rootURL}tests&#x60;;
 
     app.use(async (req, _, next) =&gt; {
       let results;
@@ -124,7 +121,7 @@ module.exports = class TestsServerAddon {
       }
 
       if (watcherSuccess) {
-        rewriteRequestUrlIfBasePageIsNeeded(req, testsPath, baseURL, results.directory);
+        rewriteRequestUrlIfBasePageIsNeeded(req, testsPath, rootURL, results.directory);
       }
 
       next();
@@ -136,7 +133,7 @@ module.exports = class TestsServerAddon {
   }
 };
 
-function rewriteRequestUrlIfBasePageIsNeeded(req, testsPath, baseURL, directory) {
+function rewriteRequestUrlIfBasePageIsNeeded(req, testsPath, rootURL, directory) {
   let acceptHeaders = req.headers.accept || [];
   let hasHTMLHeader = acceptHeaders.indexOf(&#x27;text/html&#x27;) !== -1;
   let hasWildcardHeader = acceptHeaders.indexOf(&#x27;*/*&#x27;) !== -1;
@@ -146,12 +143,12 @@ function rewriteRequestUrlIfBasePageIsNeeded(req, testsPath, baseURL, directory)
   logger.info(&#x27;isForTests: %o&#x27;, isForTests);
 
   if (isForTests &amp;&amp; (hasHTMLHeader || hasWildcardHeader) &amp;&amp; req.method === &#x27;GET&#x27;) {
-    let assetPath = req.path.slice(baseURL.length);
+    let assetPath = req.path.slice(rootURL.length);
     let filePath = path.join(directory, assetPath);
 
     if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-      // N.B., &#x60;baseURL&#x60; will end with a slash as it went through &#x60;cleanBaseURL&#x60;
-      let newURL = &#x60;${baseURL}tests/index.html&#x60;;
+      // N.B., &#x60;rootURL&#x60; will end with a slash as it went through &#x60;cleanBaseURL&#x60;
+      let newURL = &#x60;${rootURL}tests/index.html&#x60;;
       logger.info(&#x27;url: %s resolved to path: %s which is not a file. Assuming %s instead&#x27;, req.path, filePath, newURL);
       req.url = newURL;
     }

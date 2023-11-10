@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -117,24 +115,6 @@ function convertObjectToString(env) {
 }
 
 /**
- * Returns the &lt;base&gt; tag for index.html.
- *
- * @method calculateBaseTag
- * @param {String} baseURL
- * @param {String} locationType &#x27;history&#x27;, &#x27;none&#x27; or &#x27;hash&#x27;.
- * @return {String} Base tag or an empty string
- */
-function calculateBaseTag(baseURL, locationType) {
-  let normalizedBaseUrl = cleanBaseURL(baseURL);
-
-  if (locationType === &#x27;hash&#x27;) {
-    return &#x27;&#x27;;
-  }
-
-  return normalizedBaseUrl ? &#x60;&lt;base href=&quot;${normalizedBaseUrl}&quot; /&gt;&#x60; : &#x27;&#x27;;
-}
-
-/**
  * Returns the content for a specific type (section) for index.html.
  *
  * &#x60;&#x60;&#x60;
@@ -172,8 +152,6 @@ function contentFor(config, match, type, options) {
 
   switch (type) {
     case &#x27;head&#x27;:
-      content.push(calculateBaseTag(config.baseURL, config.locationType));
-
       if (options.storeConfigInMeta) {
         content.push(
           &#x60;&lt;meta name=&quot;${config.modulePrefix}/config/environment&quot; content=&quot;${encodeURIComponent(
@@ -211,7 +189,13 @@ function contentFor(config, match, type, options) {
       break;
     case &#x27;test-body-footer&#x27;:
       content.push(
-        &#x60;&lt;script&gt;Ember.assert(&#x27;The tests file was not loaded. Make sure your tests index.html includes &quot;assets/tests.js&quot;.&#x27;, EmberENV.TESTS_FILE_LOADED);&lt;/script&gt;&#x60;
+        &#x60;&lt;script&gt;
+document.addEventListener(&#x27;DOMContentLoaded&#x27;, function() {
+  if (!EmberENV.TESTS_FILE_LOADED) {
+    throw new Error(&#x27;The tests file was not loaded. Make sure your tests index.html includes &quot;assets/tests.js&quot;.&#x27;);
+  }
+});
+&lt;/script&gt;&#x60;
       );
 
       break;
@@ -271,7 +255,7 @@ function configReplacePatterns(options) {
   ];
 }
 
-module.exports = { normalizeUrl, convertObjectToString, calculateBaseTag, contentFor, configReplacePatterns };
+module.exports = { normalizeUrl, convertObjectToString, contentFor, configReplacePatterns };
 
 </pre>
 

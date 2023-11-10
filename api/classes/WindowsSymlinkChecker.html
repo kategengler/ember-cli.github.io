@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -90,11 +88,11 @@
             
                   <div><a href="#public-methods">Public Methods</a></div>
                   <ul>
-                      <li><a href="#method_calculateBaseTag">calculateBaseTag</a></li>
                       <li><a href="#method_checkIfSymlinksNeedToBeEnabled">checkIfSymlinksNeedToBeEnabled</a></li>
                       <li><a href="#method_checkIfSymlinksNeedToBeEnabled">checkIfSymlinksNeedToBeEnabled</a></li>
                       <li><a href="#method_contentFor">contentFor</a></li>
                       <li><a href="#method_convertObjectToString">convertObjectToString</a></li>
+                      <li><a href="#method_directoryForPackageName">directoryForPackageName</a></li>
                       <li><a href="#method_insertIntoFile">insertIntoFile</a></li>
                       <li><a href="#method_normalizeUrl">normalizeUrl</a></li>
                       <li><a href="#method_setupSignalsTrap">setupSignalsTrap</a></li>
@@ -110,7 +108,6 @@
                       <li><a href="#method__checkForElevatedRights">_checkForElevatedRights</a></li>
                       <li><a href="#method__setup">_setup</a></li>
                       <li><a href="#method_addHandler">addHandler</a></li>
-                      <li><a href="#method_isYarnProject">isYarnProject</a></li>
                       <li><a href="#method_onInterrupt">onInterrupt</a></li>
                       <li><a href="#method_onInterrupt">onInterrupt</a></li>
                       <li><a href="#method_release">release</a></li>
@@ -122,7 +119,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -180,21 +177,6 @@ improving their build performance, and how.</p>
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_calculateBaseTag">calculateBaseTag</a>(baseURL, locationType): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
-            </div>
-            <div class="short-description">
-              <p>Returns the <base> tag for index.html.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            public
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
               <a href="#method_checkIfSymlinksNeedToBeEnabled">checkIfSymlinksNeedToBeEnabled</a>( ): Promise<Object>
             </div>
             <div class="short-description">
@@ -244,6 +226,21 @@ improving their build performance, and how.</p>
             </div>
             <div class="short-description">
               <p>Converts Javascript Object to a string. Returns an empty object string representation if a "falsy" value is passed in.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            public
+            
+            
+          </td>
+          <td>
+            <div class="method-name ">
+              <a href="#method_directoryForPackageName">directoryForPackageName</a>(packageName): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
+            </div>
+            <div class="short-description">
+              <p>Derive a directory name from a package name. Takes scoped packages into account.</p>
             </div>
           </td>
         </tr>
@@ -416,21 +413,6 @@ improving their build performance, and how.</p>
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_isYarnProject">isYarnProject</a>(thePath): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a>
-            </div>
-            <div class="short-description">
-              <p>Returns true if and only if the given directory has a yarn.lock file or is a child of a yarn workspace root.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            private
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
               <a href="#method_onInterrupt">onInterrupt</a>( )
             </div>
             <div class="short-description">
@@ -500,76 +482,6 @@ improving their build performance, and how.</p>
 
   <div id="methods public">
     <h2 id="public-methods">Public Methods</h2>
-<div class="method item">
-    <div id="method_calculateBaseTag" class="title">
-        <span class="source-link"><a href="../files/lib_utilities_ember-app-utils.js.html#l37"><code>lib&#x2F;utilities&#x2F;ember-app-utils.js:37</code></a></span>
-        <h3 class="">
-            public
-            
-            
-            calculateBaseTag(baseURL, locationType): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"><p>Returns the <base> tag for index.html.</p>
-</div>
-
-      <div class="params">
-        <h4>Parameters:</h4>
-        <table>
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Attribute</th>
-            <th>Description</th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>baseURL</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td> </td>
-            </tr>
-
-            <tr>
-              <td>locationType</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td><p>'history', 'none' or 'hash'.</p>
-</td>
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-
-      <div class="return">
-        <h4>Return:</h4>
-        <div>
-          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
-          <span class="return-description"><p>Base tag or an empty string</p>
-</span>
-        </div>
-      </div>
-
-
-</div>
 <div class="method item public">
     <div id="method_checkIfSymlinksNeedToBeEnabled" class="title">
         <span class="source-link"><a href="../files/lib_utilities_windows-admin.js.html#l38"><code>lib&#x2F;utilities&#x2F;windows-admin.js:38</code></a></span>
@@ -634,7 +546,7 @@ achieve better windows build performance</p>
 </div>
 <div class="method item">
     <div id="method_contentFor" class="title">
-        <span class="source-link"><a href="../files/lib_utilities_ember-app-utils.js.html#l55"><code>lib&#x2F;utilities&#x2F;ember-app-utils.js:55</code></a></span>
+        <span class="source-link"><a href="../files/lib_utilities_ember-app-utils.js.html#l37"><code>lib&#x2F;utilities&#x2F;ember-app-utils.js:37</code></a></span>
         <h3 class="">
             public
             
@@ -830,6 +742,63 @@ in.</p>
 
 </div>
 <div class="method item">
+    <div id="method_directoryForPackageName" class="title">
+        <span class="source-link"><a href="../files/lib_utilities_directory-for-package-name.js.html#l5"><code>lib&#x2F;utilities&#x2F;directory-for-package-name.js:5</code></a></span>
+        <h3 class="">
+            public
+            
+            
+            directoryForPackageName(packageName): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
+        </h3>
+    </div>
+
+
+
+    <div class="method-description"><p>Derive a directory name from a package name.
+Takes scoped packages into account.</p>
+</div>
+
+      <div class="params">
+        <h4>Parameters:</h4>
+        <table>
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attribute</th>
+            <th>Description</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>packageName</td>
+              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
+              <td>
+                <ul>
+                  
+                  
+                  
+                </ul>
+              </td>
+              <td> </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div class="return">
+        <h4>Return:</h4>
+        <div>
+          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+          <span class="return-description"><p>Derived directory name.</p>
+</span>
+        </div>
+      </div>
+
+
+</div>
+<div class="method item">
     <div id="method_insertIntoFile" class="title">
         <span class="source-link"><a href="../files/lib_utilities_insert-into-file.js.html#l6"><code>lib&#x2F;utilities&#x2F;insert-into-file.js:6</code></a></span>
         <h3 class="">
@@ -856,15 +825,15 @@ will be inserted at the end of the file.</p>
 option to <code>false</code>.</p>
 <p>Example:</p>
 <pre class="code prettyprint"><code>// app/router.js
-Router.map(function() {
+Router.map(function () {
 });
 </code></pre>
 <pre class="code prettyprint"><code>insertIntoFile('app/router.js', '  this.route("admin");', {
-  after: 'Router.map(function() {' + EOL
+  after: 'Router.map(function () {' + EOL
 });
 </code></pre>
 <pre class="code prettyprint"><code>// app/router.js
-Router.map(function() {
+Router.map(function () {
   this.route("admin");
 });
 </code></pre>
@@ -1320,64 +1289,8 @@ sets up process interruption signals listeners</p>
 
 </div>
 <div class="method item private">
-    <div id="method_isYarnProject" class="title">
-        <span class="source-link"><a href="../files/lib_utilities_is-yarn-project.js.html#l6"><code>lib&#x2F;utilities&#x2F;is-yarn-project.js:6</code></a></span>
-        <h3 class="">
-            private
-            
-            
-            isYarnProject(thePath): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a>
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"><p>Returns true if and only if the given directory has a yarn.lock file or is a child of a
-yarn workspace root.</p>
-</div>
-
-      <div class="params">
-        <h4>Parameters:</h4>
-        <table>
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Attribute</th>
-            <th>Description</th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>thePath</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td> </td>
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-
-      <div class="return">
-        <h4>Return:</h4>
-        <div>
-          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
-          <span class="return-description"></span>
-        </div>
-      </div>
-
-
-</div>
-<div class="method item private">
     <div id="method_onInterrupt" class="title">
-        <span class="source-link"><a href="../files/lib_tasks_serve.js.html#l100"><code>lib&#x2F;tasks&#x2F;serve.js:100</code></a></span>
+        <span class="source-link"><a href="../files/lib_tasks_serve.js.html#l102"><code>lib&#x2F;tasks&#x2F;serve.js:102</code></a></span>
         <h3 class="">
             private
             

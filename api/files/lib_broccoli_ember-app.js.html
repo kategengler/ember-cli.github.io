@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -91,33 +89,21 @@ const p = require(&#x27;ember-cli-preprocess-registry/preprocessors&#x27;);
 const chalk = require(&#x27;chalk&#x27;);
 const resolve = require(&#x27;resolve&#x27;);
 
+const { assert, deprecate } = require(&#x27;../debug&#x27;);
 const Project = require(&#x27;../models/project&#x27;);
-const SilentError = require(&#x27;silent-error&#x27;);
-
-let preprocessJs = p.preprocessJs;
-let isType = p.isType;
-
-let preprocessTemplates = p.preprocessTemplates;
 
 const concat = require(&#x27;broccoli-concat&#x27;);
 const BroccoliDebug = require(&#x27;broccoli-debug&#x27;);
-const AmdFunnel = require(&#x27;broccoli-amd-funnel&#x27;);
 const mergeTrees = require(&#x27;./merge-trees&#x27;);
+const broccoliMergeTrees = require(&#x27;broccoli-merge-trees&#x27;);
 const WatchedDir = require(&#x27;broccoli-source&#x27;).WatchedDir;
 const UnwatchedDir = require(&#x27;broccoli-source&#x27;).UnwatchedDir;
-const BroccoliMergeTrees = require(&#x27;broccoli-merge-trees&#x27;);
 
-const merge = require(&#x27;ember-cli-lodash-subset&#x27;).merge;
-const defaultsDeep = require(&#x27;ember-cli-lodash-subset&#x27;).defaultsDeep;
-const omitBy = require(&#x27;ember-cli-lodash-subset&#x27;).omitBy;
-const isNull = require(&#x27;ember-cli-lodash-subset&#x27;).isNull;
+const { merge, defaultsDeep, omitBy, isNull } = require(&#x27;ember-cli-lodash-subset&#x27;);
 const Funnel = require(&#x27;broccoli-funnel&#x27;);
 const logger = require(&#x27;heimdalljs-logger&#x27;)(&#x27;ember-cli:ember-app&#x27;);
 const addonProcessTree = require(&#x27;../utilities/addon-process-tree&#x27;);
 const lintAddonsByType = require(&#x27;../utilities/lint-addons-by-type&#x27;);
-const emberCLIBabelConfigKey = require(&#x27;../utilities/ember-cli-babel-config-key&#x27;);
-const { isExperimentEnabled } = require(&#x27;../experiments&#x27;);
-const semver = require(&#x27;semver&#x27;);
 const DefaultPackager = require(&#x27;./default-packager&#x27;);
 
 let DEFAULT_CONFIG = {
@@ -147,7 +133,6 @@ let DEFAULT_CONFIG = {
   },
   sourcemaps: {},
   trees: {},
-  jshintrc: {},
   addons: {},
 };
 
@@ -162,12 +147,10 @@ class EmberApp {
    - autoRun, defaults to &#x60;true&#x60;
    - outputPaths, defaults to &#x60;{}&#x60;
    - minifyCSS, defaults to &#x60;{enabled: !!isProduction,options: { relativeTo: &#x27;assets&#x27; }}
-   - minifyJS, defaults to &#x60;{enabled: !!isProduction}
    - sourcemaps, defaults to &#x60;{}&#x60;
    - trees, defaults to &#x60;{}&#x60;
-   - jshintrc, defaults to &#x60;{}&#x60;
    - vendorFiles, defaults to &#x60;{}&#x60;
-   - addons, defaults to &#x60;{ blacklist: [], whitelist: [] }&#x60;
+   - addons, defaults to &#x60;{ exclude: [], include: [] }&#x60;
 
    @class EmberApp
    @constructor
@@ -190,8 +173,6 @@ class EmberApp {
     this.isProduction = this.env === &#x27;production&#x27;;
 
     this.registry = options.registry || p.defaultRegistry(this);
-
-    this.bowerDirectory = this.project.bowerDirectory;
 
     this._initTestsAndHinting(options);
     this._initOptions(options);
@@ -218,10 +199,6 @@ class EmberApp {
     p.setupRegistry(this);
     this._importAddonTransforms();
     this._notifyAddonIncluded();
-
-    if (!this._addonInstalled(&#x27;loader.js&#x27;) &amp;&amp; !this.options._ignoreMissingLoader) {
-      throw new SilentError(&#x27;The loader.js addon is missing from your project, please add it to &#x60;package.json&#x60;.&#x27;);
-    }
 
     this._debugTree = BroccoliDebug.buildDebugCallback(&#x27;ember-app&#x27;);
 
@@ -253,8 +230,31 @@ class EmberApp {
       },
     });
 
-    this._isPackageHookSupplied = typeof this.options.package === &#x27;function&#x27;;
     this._cachedAddonBundles = {};
+
+    if (this.project.perBundleAddonCache &amp;&amp; this.project.perBundleAddonCache.numProxies &gt; 0) {
+      if (this.options.addons.include &amp;&amp; this.options.addons.include.length) {
+        throw new Error(
+          [
+            &#x60;[ember-cli] addon bundle caching is disabled for apps that specify an addon &quot;include&quot;&#x60;,
+            &#x27;&#x27;,
+            &#x27;All addons using bundle caching:&#x27;,
+            ...this.project.perBundleAddonCache.getPathsToAddonsOptedIn(),
+          ].join(&#x27;\n&#x27;)
+        );
+      }
+
+      if (this.options.addons.exclude &amp;&amp; this.options.addons.exclude.length) {
+        throw new Error(
+          [
+            &#x60;[ember-cli] addon bundle caching is disabled for apps that specify an addon &quot;exclude&quot;&#x60;,
+            &#x27;&#x27;,
+            &#x27;All addons using bundle caching:&#x27;,
+            ...this.project.perBundleAddonCache.getPathsToAddonsOptedIn(),
+          ].join(&#x27;\n&#x27;)
+        );
+      }
+    }
   }
 
   /**
@@ -303,6 +303,20 @@ class EmberApp {
     @param {Object} options
   */
   _initOptions(options) {
+    deprecate(
+      &#x27;Using the &#x60;outputPaths&#x60; build option is deprecated, as output paths will no longer be predetermined under Embroider.&#x27;,
+      typeof options.outputPaths === &#x27;undefined&#x27;,
+      {
+        for: &#x27;ember-cli&#x27;,
+        id: &#x27;ember-cli.outputPaths-build-option&#x27;,
+        since: {
+          available: &#x27;5.3.0&#x27;,
+          enabled: &#x27;5.3.0&#x27;,
+        },
+        until: &#x27;6.0.0&#x27;,
+      }
+    );
+
     let resolvePathFor = (defaultPath, specified) =&gt; {
       let path = defaultPath;
       if (specified &amp;&amp; typeof specified === &#x27;string&#x27;) {
@@ -333,8 +347,6 @@ class EmberApp {
     let trees = (options &amp;&amp; options.trees) || {};
 
     let appTree = buildTreeFor(&#x27;app&#x27;, trees.app);
-
-    let testsPath = typeof trees.tests === &#x27;string&#x27; ? resolvePathFor(&#x27;tests&#x27;, trees.tests) : null;
     let testsTree = buildTreeFor(&#x27;tests&#x27;, trees.tests, options.tests);
 
     // these are contained within app/ no need to watch again
@@ -347,46 +359,14 @@ class EmberApp {
     }
 
     let templatesTree = buildTreeFor(&#x27;app/templates&#x27;, trees.templates, false);
-
-    // do not watch bower&#x27;s default directory by default
-    let bowerTree = buildTreeFor(this.bowerDirectory, null, !!this.project._watchmanInfo.enabled);
-
-    // Set the flag to make sure:
-    //
-    // - we do not blow up if there is no bower_components folder
-    // - we do not attempt to merge bower and vendor together if they are the
-    //   same tree
-    this._bowerEnabled = this.bowerDirectory !== &#x27;vendor&#x27; &amp;&amp; fs.existsSync(this.bowerDirectory);
-
     let vendorTree = buildTreeFor(&#x27;vendor&#x27;, trees.vendor);
     let publicTree = buildTreeFor(&#x27;public&#x27;, trees.public);
 
     let detectedDefaultOptions = {
       babel: {},
-      jshintrc: {
-        app: this.project.root,
-        tests: testsPath,
-      },
       minifyCSS: {
         enabled: this.isProduction,
         options: { processImport: false },
-      },
-      // TODO: remove this with a deprecation (nothing in the default app/addon setup consumes it)
-      minifyJS: {
-        enabled: this.isProduction,
-        options: {
-          compress: {
-            // this is adversely affects heuristics for IIFE eval
-            // eslint-disable-next-line camelcase
-            negate_iife: false,
-            // limit sequences because of memory issues during parsing
-            sequences: 30,
-          },
-          output: {
-            // no difference in size and much easier to debug
-            semicolons: false,
-          },
-        },
       },
       outputPaths: {
         app: {
@@ -405,7 +385,6 @@ class EmberApp {
         tests: testsTree,
         styles: stylesTree,
         templates: templatesTree,
-        bower: bowerTree,
         vendor: vendorTree,
         public: publicTree,
       },
@@ -413,18 +392,8 @@ class EmberApp {
 
     let emberCLIBabelInstance = this.project.findAddonByName(&#x27;ember-cli-babel&#x27;);
     if (emberCLIBabelInstance) {
-      let version = this.project.require(&#x27;ember-cli-babel/package.json&#x27;).version;
-      if (semver.lt(version, &#x27;6.0.0-alpha.1&#x27;)) {
-        detectedDefaultOptions.babel = {
-          modules: &#x27;amdStrict&#x27;,
-          moduleIds: true,
-          resolveModuleSource: require(&#x27;amd-name-resolver&#x27;).moduleResolve,
-        };
-      }
-
-      let emberCLIBabelConfigKey = this._emberCLIBabelConfigKey();
-      detectedDefaultOptions[emberCLIBabelConfigKey] = detectedDefaultOptions[emberCLIBabelConfigKey] || {};
-      detectedDefaultOptions[emberCLIBabelConfigKey].compileModules = true;
+      detectedDefaultOptions[&#x27;ember-cli-babel&#x27;] = detectedDefaultOptions[&#x27;ember-cli-babel&#x27;] || {};
+      detectedDefaultOptions[&#x27;ember-cli-babel&#x27;].compileModules = true;
     }
 
     this.options = defaultsDeep(options, detectedDefaultOptions, DEFAULT_CONFIG);
@@ -442,12 +411,6 @@ class EmberApp {
     this.options.fingerprint.exclude.push(&#x27;testem&#x27;);
   }
 
-  _emberCLIBabelConfigKey() {
-    let emberCLIBabelInstance = this.project.findAddonByName(&#x27;ember-cli-babel&#x27;);
-
-    return emberCLIBabelConfigKey(emberCLIBabelInstance);
-  }
-
   /**
     Resolves a path relative to the project&#x27;s root
 
@@ -463,118 +426,26 @@ class EmberApp {
     @method _initVendorFiles
   */
   _initVendorFiles() {
-    let bowerDeps = this.project.bowerDependencies();
-    let ember = this.project.findAddonByName(&#x27;ember-source&#x27;);
-    let addonEmberCliShims = this.project.findAddonByName(&#x27;ember-cli-shims&#x27;);
-    let bowerEmberCliShims = bowerDeps[&#x27;ember-cli-shims&#x27;];
-    let developmentEmber;
-    let productionEmber;
-    let emberTesting;
-    let emberShims = null;
+    let emberSource = this.project.findAddonByName(&#x27;ember-source&#x27;);
 
-    if (ember) {
-      developmentEmber = ember.paths.debug;
-      productionEmber = ember.paths.prod;
-      emberTesting = ember.paths.testing;
-      emberShims = ember.paths.shims;
-    } else {
-      if (bowerEmberCliShims) {
-        emberShims = &#x60;${this.bowerDirectory}/ember-cli-shims/app-shims.js&#x60;;
-      }
-
-      // in Ember 1.10 and higher &#x60;ember.js&#x60; is deprecated in favor of
-      // the more aptly named &#x60;ember.debug.js&#x60;.
-      productionEmber = &#x60;${this.bowerDirectory}/ember/ember.prod.js&#x60;;
-      developmentEmber = &#x60;${this.bowerDirectory}/ember/ember.debug.js&#x60;;
-      if (!fs.existsSync(this._resolveLocal(developmentEmber))) {
-        developmentEmber = &#x60;${this.bowerDirectory}/ember/ember.js&#x60;;
-      }
-      emberTesting = &#x60;${this.bowerDirectory}/ember/ember-testing.js&#x60;;
-    }
-
-    let handlebarsVendorFiles;
-    if (&#x27;handlebars&#x27; in bowerDeps) {
-      handlebarsVendorFiles = {
-        development: &#x60;${this.bowerDirectory}/handlebars/handlebars.js&#x60;,
-        production: &#x60;${this.bowerDirectory}/handlebars/handlebars.runtime.js&#x60;,
-      };
-    } else {
-      handlebarsVendorFiles = null;
-    }
+    assert(
+      &#x27;Could not find &#x60;ember-source&#x60;. Please install &#x60;ember-source&#x60; by running &#x60;ember install ember-source&#x60;.&#x27;,
+      emberSource
+    );
 
     this.vendorFiles = omitBy(
       merge(
         {
-          &#x27;handlebars.js&#x27;: handlebarsVendorFiles,
           &#x27;ember.js&#x27;: {
-            development: developmentEmber,
-            production: productionEmber,
+            development: emberSource.paths.debug,
+            production: emberSource.paths.prod,
           },
-          &#x27;ember-testing.js&#x27;: [emberTesting, { type: &#x27;test&#x27; }],
-          &#x27;app-shims.js&#x27;: emberShims,
-          &#x27;ember-resolver.js&#x27;: [
-            &#x60;${this.bowerDirectory}/ember-resolver/dist/modules/ember-resolver.js&#x60;,
-            {
-              exports: {
-                &#x27;ember/resolver&#x27;: [&#x27;default&#x27;],
-              },
-            },
-          ],
+          &#x27;ember-testing.js&#x27;: [emberSource.paths.testing, { type: &#x27;test&#x27; }],
         },
         this.options.vendorFiles
       ),
       isNull
     );
-
-    this._addJqueryInLegacyEmber();
-
-    if (this._addonInstalled(&#x27;ember-resolver&#x27;) || !bowerDeps[&#x27;ember-resolver&#x27;]) {
-      // if the project is using &#x60;ember-resolver&#x60; as an addon
-      // remove it from &#x60;vendorFiles&#x60; (the npm version properly works
-      // without &#x60;app.import&#x60;s)
-      delete this.vendorFiles[&#x27;ember-resolver.js&#x27;];
-    }
-
-    // Warn if ember-cli-shims is not included.
-    // certain versions of &#x60;ember-source&#x60; bundle them by default,
-    // so we must check if that is the load mechanism of ember
-    // before checking &#x60;bower&#x60;.
-    let emberCliShimsRequired = this._checkEmberCliBabel(this.project.addons);
-    if (!emberShims &amp;&amp; !addonEmberCliShims &amp;&amp; !bowerEmberCliShims &amp;&amp; emberCliShimsRequired) {
-      this.project.ui.writeWarnLine(
-        &quot;You have not included &#x60;ember-cli-shims&#x60; in your project&#x27;s &#x60;bower.json&#x60; or &#x60;package.json&#x60;. This only works if you provide an alternative yourself and unset &#x60;app.vendorFiles[&#x27;app-shims.js&#x27;]&#x60;.&quot;
-      );
-    }
-
-    // If ember-testing.js is coming from Bower (not ember-source) and it does not
-    // exist, then we remove it from vendor files. This is needed to support versions
-    // of Ember older than 1.8.0 (when ember-testing.js was incldued in ember.js itself)
-    if (!ember &amp;&amp; this.vendorFiles[&#x27;ember-testing.js&#x27;] &amp;&amp; !fs.existsSync(this.vendorFiles[&#x27;ember-testing.js&#x27;][0])) {
-      delete this.vendorFiles[&#x27;ember-testing.js&#x27;];
-    }
-  }
-
-  _addJqueryInLegacyEmber() {
-    if (this.project.findAddonByName(&#x27;@ember/jquery&#x27;)) {
-      return;
-    }
-    let ember = this.project.findAddonByName(&#x27;ember-source&#x27;);
-    let jqueryPath;
-    if (ember) {
-      let optionFeatures = this.project.findAddonByName(&#x27;@ember/optional-features&#x27;);
-      if (optionFeatures &amp;&amp; !optionFeatures.isFeatureEnabled(&#x27;jquery-integration&#x27;)) {
-        return;
-      }
-      this.project.ui.writeDeprecateLine(
-        &#x27;The integration of jQuery into Ember has been deprecated and will be removed with Ember 4.0. You can either&#x27; +
-          &#x27; opt-out of using jQuery, or install the &#x60;@ember/jquery&#x60; addon to provide the jQuery integration. Please&#x27; +
-          &#x27; consult the deprecation guide for further details: https://emberjs.com/deprecations/v3.x#toc_jquery-apis&#x27;
-      );
-      jqueryPath = ember.paths.jquery;
-    } else {
-      jqueryPath = &#x60;${this.bowerDirectory}/jquery/dist/jquery.js&#x60;;
-    }
-    this.vendorFiles = merge({ &#x27;jquery.js&#x27;: jqueryPath }, this.vendorFiles);
   }
 
   /**
@@ -618,52 +489,24 @@ class EmberApp {
 
   /**
     @private
-    @method _addonDisabledByBlacklist
+    @method _addonDisabledByExclude
     @param {Addon} addon
     @return {Boolean}
   */
-  _addonDisabledByBlacklist(addon) {
-    let blacklist = this.options.addons.blacklist;
-    return !!blacklist &amp;&amp; blacklist.indexOf(addon.name) !== -1;
+  _addonDisabledByExclude(addon) {
+    let exclude = this.options.addons.exclude;
+    return !!exclude &amp;&amp; exclude.indexOf(addon.name) !== -1;
   }
 
   /**
     @private
-    @method _addonDisabledByWhitelist
+    @method _addonDisabledByInclude
     @param {Addon} addon
     @return {Boolean}
   */
-  _addonDisabledByWhitelist(addon) {
-    let whitelist = this.options.addons.whitelist;
-    return !!whitelist &amp;&amp; whitelist.indexOf(addon.name) === -1;
-  }
-
-  /**
-    @private
-    @method _checkEmberCliBabel
-    @param {Addons} addons
-    @return {Boolean}
-  */
-  _checkEmberCliBabel(addons, result, roots) {
-    addons = addons || [];
-    result = result || false;
-    roots = roots || {};
-
-    let babelInstance = addons.find((addon) =&gt; addon.name === &#x27;ember-cli-babel&#x27;);
-    if (babelInstance) {
-      let version = babelInstance.pkg.version;
-      if (semver.lt(version, &#x27;6.6.0&#x27;)) {
-        result = true;
-      }
-      if (semver.lt(version, &#x27;6.0.0&#x27;) &amp;&amp; !roots[babelInstance.root]) {
-        roots[babelInstance.root] = true;
-        this.project.ui.writeDeprecateLine(
-          &#x60;ember-cli-babel 5.x has been deprecated. Please upgrade to at least ember-cli-babel 6.6. Version ${version} located: ${babelInstance.root}&#x60;
-        );
-      }
-    }
-
-    return addons.some((addon) =&gt; this._checkEmberCliBabel(addon.addons, result, roots)) || result;
+  _addonDisabledByInclude(addon) {
+    let include = this.options.addons.include;
+    return !!include &amp;&amp; include.indexOf(addon.name) === -1;
   }
 
   /**
@@ -679,7 +522,7 @@ class EmberApp {
       return false;
     }
 
-    return !this._addonDisabledByBlacklist(addon) &amp;&amp; !this._addonDisabledByWhitelist(addon);
+    return !this._addonDisabledByExclude(addon) &amp;&amp; !this._addonDisabledByInclude(addon);
   }
 
   /**
@@ -691,18 +534,18 @@ class EmberApp {
   _notifyAddonIncluded() {
     let addonNames = this.project.addons.map((addon) =&gt; addon.name);
 
-    if (this.options.addons.blacklist) {
-      this.options.addons.blacklist.forEach((addonName) =&gt; {
+    if (this.options.addons.exclude) {
+      this.options.addons.exclude.forEach((addonName) =&gt; {
         if (addonNames.indexOf(addonName) === -1) {
-          throw new Error(&#x60;Addon &quot;${addonName}&quot; defined in blacklist is not found&#x60;);
+          throw new Error(&#x60;Addon &quot;${addonName}&quot; defined in &quot;exclude&quot; is not found&#x60;);
         }
       });
     }
 
-    if (this.options.addons.whitelist) {
-      this.options.addons.whitelist.forEach((addonName) =&gt; {
+    if (this.options.addons.include) {
+      this.options.addons.include.forEach((addonName) =&gt; {
         if (addonNames.indexOf(addonName) === -1) {
-          throw new Error(&#x60;Addon &quot;${addonName}&quot; defined in whitelist is not found&#x60;);
+          throw new Error(&#x60;Addon &quot;${addonName}&quot; defined in &quot;include&quot; is not found&#x60;);
         }
       });
     }
@@ -804,92 +647,6 @@ class EmberApp {
    */
   addonTreesFor(type) {
     return this._addonTreesFor(type).map((addonBundle) =&gt; addonBundle.tree);
-  }
-
-  _getDefaultPluginForType(type) {
-    let plugins = this.registry.load(type);
-    let defaultsForType = plugins.filter((plugin) =&gt; plugin.isDefaultForType);
-
-    if (defaultsForType.length &gt; 1) {
-      throw new Error(
-        &#x60;There are multiple preprocessor plugins marked as default for &#x27;${type}&#x27;: ${defaultsForType
-          .map((p) =&gt; p.name)
-          .join(&#x27;, &#x27;)}&#x60;
-      );
-    }
-
-    return defaultsForType[0];
-  }
-
-  _compileAddonTemplates(tree) {
-    let defaultPluginForType = this._getDefaultPluginForType(&#x27;template&#x27;);
-    let options = {
-      annotation: &#x60;_compileAddonTemplates&#x60;,
-      registry: this.registry,
-    };
-
-    if (defaultPluginForType) {
-      tree = defaultPluginForType.toTree(tree, options);
-    } else {
-      tree = preprocessTemplates(tree, options);
-    }
-
-    return tree;
-  }
-
-  _compileAddonJs(tree) {
-    let defaultPluginForType = this._getDefaultPluginForType(&#x27;js&#x27;);
-    let options = {
-      annotation: &#x27;_compileAddonJs&#x27;,
-      registry: this.registry,
-    };
-
-    if (defaultPluginForType) {
-      tree = defaultPluginForType.toTree(tree, options);
-    } else {
-      tree = preprocessJs(tree, &#x27;/&#x27;, &#x27;/&#x27;, options);
-    }
-
-    return tree;
-  }
-
-  _compileAddonTree(tree, skipTemplates) {
-    if (!skipTemplates) {
-      tree = this._compileAddonTemplates(tree);
-    }
-    tree = this._compileAddonJs(tree);
-
-    return tree;
-  }
-
-  _precompileAppJsTree(tree) {
-    let emberCLIBabelConfigKey = this._emberCLIBabelConfigKey();
-
-    let original = this.options[emberCLIBabelConfigKey];
-
-    // the app will handle transpilation after it tree-shakes
-    // do it here instead of the constructor because
-    // ember-data and others do their own compilation in their
-    // treeForAddon without calling super
-    // they need the original params preserved because they call
-    // babel themselves and expect compilation the old way
-    this.options[emberCLIBabelConfigKey] = Object.assign({}, original, {
-      compileModules: false,
-      disablePresetEnv: true,
-      disableDebugTooling: true,
-      disableEmberModulesAPIPolyfill: true,
-    });
-
-    tree = preprocessJs(tree, &#x27;/&#x27;, &#x27;/&#x27;, {
-      annotation: &#x60;_precompileAppJsTree&#x60;,
-      registry: this.registry,
-    });
-
-    // return the original params because there are multiple
-    // entrances to preprocessJs
-    this.options[emberCLIBabelConfigKey] = original;
-
-    return tree;
   }
 
   /**
@@ -1070,7 +827,7 @@ class EmberApp {
    * @method getAppJavascript
    * @return {BroccoliTree}
    */
-  getAppJavascript(isPackageHookSupplied) {
+  getAppJavascript() {
     let appTrees = [].concat(this.addonTreesFor(&#x27;app&#x27;), this.trees.app).filter(Boolean);
 
     let mergedApp = mergeTrees(appTrees, {
@@ -1083,10 +840,6 @@ class EmberApp {
       destDir: this.name,
       annotation: &#x27;ProcessedAppTree&#x27;,
     });
-
-    if (isExperimentEnabled(&#x27;PACKAGER&#x27;) &amp;&amp; isPackageHookSupplied) {
-      appTree = this._precompileAppJsTree(appTree);
-    }
 
     return appTree;
   }
@@ -1242,7 +995,6 @@ class EmberApp {
    *
    * + app &#x60;vendor&#x60; files
    * + add-ons&#x27; &#x60;vendor&#x60; files
-   * + bower packages
    * + node modules
    *
    * Resulting tree:
@@ -1250,7 +1002,6 @@ class EmberApp {
    * &#x60;&#x60;&#x60;
    * /
    * ├── addon-tree-output/
-   * ├── bower_components/
    * └── vendor/
    * &#x60;&#x60;&#x60;
    *
@@ -1272,13 +1023,7 @@ class EmberApp {
       );
 
       let addons = this.addonTree();
-
       let trees = [vendor].concat(addons);
-      if (this._bowerEnabled) {
-        let bower = this._defaultPackager.packageBower(this.trees.bower, this.bowerDirectory);
-
-        trees.push(bower);
-      }
 
       trees = this._nodeModuleTrees().concat(trees);
 
@@ -1421,16 +1166,6 @@ class EmberApp {
   }
 
   /**
-   * @private
-   * @method _addonInstalled
-   * @param  {String} addonName The name of the addon we are checking to see if it&#x27;s installed
-   * @return {Boolean}
-   */
-  _addonInstalled(addonName) {
-    return !!this.registry.availablePlugins[addonName];
-  }
-
-  /**
     @public
     @method dependencies
     @return {Object} Alias to the project&#x27;s dependencies function
@@ -1473,7 +1208,7 @@ class EmberApp {
     }
 
     let directory = path.dirname(assetPath);
-    let subdirectory = directory.replace(new RegExp(&#x60;^vendor/|${this.bowerDirectory}|node_modules/&#x60;), &#x27;&#x27;);
+    let subdirectory = directory.replace(new RegExp(&#x60;^vendor/|node_modules/&#x60;), &#x27;&#x27;);
     let extension = path.extname(assetPath);
 
     if (!extension) {
@@ -1498,7 +1233,7 @@ class EmberApp {
     // TODO: refactor, this has gotten very messy. Relevant tests: tests/unit/broccoli/ember-app-test.js
     let basename = path.basename(assetPath);
 
-    if (isType(assetPath, &#x27;js&#x27;, { registry: this.registry })) {
+    if (p.isType(assetPath, &#x27;js&#x27;, { registry: this.registry })) {
       if (options.using) {
         if (!Array.isArray(options.using)) {
           throw new Error(&#x27;You must pass an array of transformations for &#x60;using&#x60; option&#x27;);
@@ -1625,75 +1360,8 @@ class EmberApp {
       this.getTests(),
       this.getExternalTree(),
       this.getPublic(),
-      this.getAppJavascript(this._isPackageHookSupplied),
+      this.getAppJavascript(),
     ].filter(Boolean);
-  }
-
-  _legacyAddonCompile(type, outputDir, _options) {
-    let options = Object.assign(
-      {
-        // moduleNormalizerDisabled: this.options.moduleNormalizerDisabled,
-        amdFunnelDisabled: this.options.amdFunnelDisabled,
-        skipTemplates: false,
-      },
-      _options
-    );
-
-    let addonBundles = this._cachedAddonBundles[type];
-
-    let addonTrees = addonBundles.map((addonBundle) =&gt; {
-      let { name, tree, root } = addonBundle;
-
-      let precompiledSource = tree;
-
-      if (!options.amdFunnelDisabled) {
-        // don&#x27;t want to double compile the AMD modules
-        let hasAlreadyPrintedAmdDeprecation;
-        precompiledSource = new AmdFunnel(precompiledSource, {
-          callback: () =&gt; {
-            if (!hasAlreadyPrintedAmdDeprecation) {
-              this.project.ui.writeDeprecateLine(
-                &#x60;Addon &quot;${name}&quot; (found at &quot;${root}&quot;) is manually generating AMD modules. Code should be ES6 modules only. Support for this will be removed in a future version.&#x60;
-              );
-              hasAlreadyPrintedAmdDeprecation = true;
-            }
-          },
-          annotation: &#x60;AmdFunnel (${type} ${name})&#x60;,
-        });
-      }
-
-      return [tree, precompiledSource];
-    });
-
-    let precompiledSource = addonTrees.map((pair) =&gt; pair[1]);
-    addonTrees = addonTrees.map((pair) =&gt; pair[0]);
-
-    precompiledSource = mergeTrees(precompiledSource, {
-      overwrite: true,
-      annotation: &#x60;TreeMerger (${type})&#x60;,
-    });
-
-    precompiledSource = this._debugTree(precompiledSource, &#x60;precompiledAddonTree:${type}&#x60;);
-
-    let compiledSource = this._compileAddonTree(precompiledSource, options.skipTemplates);
-
-    compiledSource = this._debugTree(compiledSource, &#x60;postcompiledAddonTree:${type}&#x60;);
-
-    let combinedAddonTree;
-
-    if (options.amdFunnelDisabled) {
-      combinedAddonTree = compiledSource;
-    } else {
-      combinedAddonTree = mergeTrees(addonTrees.concat(compiledSource), {
-        overwrite: true,
-        annotation: &#x60;AmdFunnel TreeMerger (${type})&#x60;,
-      });
-    }
-
-    return new Funnel(combinedAddonTree, {
-      destDir: outputDir,
-      annotation: &#x60;Funnel: ${outputDir} ${type}&#x60;,
-    });
   }
 
   _legacyPackage(fullTree) {
@@ -1725,7 +1393,6 @@ class EmberApp {
    */
   toTree(additionalTrees) {
     let packagedTree;
-    let packageFn = this.options.package;
 
     let fullTree = mergeTrees(this.toArray(), {
       overwrite: true,
@@ -1734,20 +1401,12 @@ class EmberApp {
 
     fullTree = this._debugTree(fullTree, &#x27;prepackage&#x27;);
 
-    if (isExperimentEnabled(&#x27;PACKAGER&#x27;)) {
-      if (this._isPackageHookSupplied) {
-        packagedTree = packageFn.call(this, fullTree);
-      } else {
-        this.project.ui.writeWarnLine(&#x27;&#x60;package&#x60; hook must be a function, falling back to default packaging.&#x27;);
-      }
-    }
-
     if (!packagedTree) {
       packagedTree = this._legacyPackage(fullTree);
     }
 
     let trees = [].concat(packagedTree, additionalTrees).filter(Boolean);
-    let combinedPackageTree = new BroccoliMergeTrees(trees);
+    let combinedPackageTree = broccoliMergeTrees(trees);
 
     return this.addonPostprocessTree(&#x27;all&#x27;, combinedPackageTree);
   }

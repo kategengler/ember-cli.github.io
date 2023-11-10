@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -108,7 +106,6 @@ class Builder extends CoreObject {
 
     // Use Broccoli 2.0 by default, if this fails due to .read/.rebuild API, fallback to broccoli-builder
     this.broccoliBuilderFallback = false;
-    this.setupBroccoliBuilder();
 
     this._instantiationStack = new Error().stack.replace(/[^\n]*\n/, &#x27;&#x27;);
     this._cleanup = this.cleanup.bind(this);
@@ -124,25 +121,31 @@ class Builder extends CoreObject {
    * @method readBuildFile
    * @param path The file path to read the build file from
    */
-  readBuildFile(path) {
+  async readBuildFile(path) {
     // Load the build file
-    let buildFile = findBuildFile(&#x27;ember-cli-build.js&#x27;, path);
+    let buildFile = await findBuildFile(path);
     if (buildFile) {
-      return buildFile({ project: this.project });
+      return await buildFile({ project: this.project });
     }
 
     throw new SilentError(&#x27;No ember-cli-build.js found.&#x27;);
+  }
+
+  async ensureBroccoliBuilder() {
+    if (this.builder === undefined) {
+      await this.setupBroccoliBuilder();
+    }
   }
 
   /**
    * @private
    * @method setupBroccoliBuilder
    */
-  setupBroccoliBuilder() {
+  async setupBroccoliBuilder() {
     this.environment = this.environment || &#x27;development&#x27;;
     process.env.EMBER_ENV = process.env.EMBER_ENV || this.environment;
 
-    this.tree = this.readBuildFile(this.project.root);
+    this.tree = await this.readBuildFile(this.project.root);
 
     let broccoli = require(&#x27;broccoli&#x27;);
 
@@ -249,6 +252,8 @@ class Builder extends CoreObject {
    * @return {Promise}
    */
   async build(addWatchDirCallback, resultAnnotation) {
+    await this.ensureBroccoliBuilder();
+
     let buildResults, uiProgressIntervalID;
 
     try {
@@ -302,6 +307,10 @@ class Builder extends CoreObject {
       return buildResults;
     } catch (error) {
       await this.processAddonBuildSteps(&#x27;buildError&#x27;, error);
+
+      // Mark this as a builder error so the watcher knows it has been handled
+      // and won&#x27;t re-throw it
+      error.isBuilderError = true;
 
       throw error;
     } finally {

@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -131,7 +129,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -598,7 +596,7 @@
 </div>
 <div class="property item">
   <div id="props_anonymousOptions" class="title">
-    <span class="source-link"><a href="../files/lib_models_command.js.html#l138"><code>lib&#x2F;models&#x2F;command.js:138</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_command.js.html#l137"><code>lib&#x2F;models&#x2F;command.js:137</code></a></span>
     <h3 class="">
       public
       
@@ -639,7 +637,6 @@
   { name: 'verbose',    type: Boolean, default: false, aliases: ['v'] },
   { name: 'blueprint',  type: String,  default: 'app', aliases: ['b'] },
   { name: 'skip-npm',   type: Boolean, default: false, aliases: ['sn'] },
-  { name: 'skip-bower', type: Boolean, default: false, aliases: ['sb'] },
   { name: 'skip-git',   type: Boolean, default: false, aliases: ['sg'] },
   { name: 'directory',  type: String ,                 aliases: ['dir'] }
 ],
@@ -726,7 +723,7 @@
     <h2 id="public-methods">Public Methods</h2>
 <div class="method item">
     <div id="method_assignAlias" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l494"><code>lib&#x2F;models&#x2F;command.js:494</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l482"><code>lib&#x2F;models&#x2F;command.js:482</code></a></span>
         <h3 class="">
             public
             
@@ -793,7 +790,7 @@
 </div>
 <div class="method item">
     <div id="method_assignOption" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l390"><code>lib&#x2F;models&#x2F;command.js:390</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l378"><code>lib&#x2F;models&#x2F;command.js:378</code></a></span>
         <h3 class="">
             public
             
@@ -874,7 +871,7 @@
 </div>
 <div class="method item">
     <div id="method_beforeRun" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l249"><code>lib&#x2F;models&#x2F;command.js:249</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l247"><code>lib&#x2F;models&#x2F;command.js:247</code></a></span>
         <h3 class="">
             public
             
@@ -902,7 +899,7 @@ Most common use case would be to extend availableOptions.</p>
 </div>
 <div class="method item">
     <div id="method_getJson" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l648"><code>lib&#x2F;models&#x2F;command.js:648</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l636"><code>lib&#x2F;models&#x2F;command.js:636</code></a></span>
         <h3 class="">
             public
             
@@ -956,7 +953,7 @@ Most common use case would be to extend availableOptions.</p>
 </div>
 <div class="method item">
     <div id="method_hasOption" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l322"><code>lib&#x2F;models&#x2F;command.js:322</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l315"><code>lib&#x2F;models&#x2F;command.js:315</code></a></span>
         <h3 class="">
             public
             
@@ -1011,7 +1008,7 @@ Most common use case would be to extend availableOptions.</p>
 </div>
 <div class="method item">
     <div id="method_mergeDuplicateOption" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l338"><code>lib&#x2F;models&#x2F;command.js:338</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l331"><code>lib&#x2F;models&#x2F;command.js:331</code></a></span>
         <h3 class="">
             public
             
@@ -1067,7 +1064,7 @@ Used primarily by registerOptions.</p>
 </div>
 <div class="method item">
     <div id="method_normalizeOption" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l378"><code>lib&#x2F;models&#x2F;command.js:378</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l366"><code>lib&#x2F;models&#x2F;command.js:366</code></a></span>
         <h3 class="">
             public
             
@@ -1122,7 +1119,7 @@ Used primarily by registerOptions.</p>
 </div>
 <div class="method item">
     <div id="method_onInterrupt" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l180"><code>lib&#x2F;models&#x2F;command.js:180</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l179"><code>lib&#x2F;models&#x2F;command.js:179</code></a></span>
         <h3 class="">
             public
             
@@ -1151,7 +1148,7 @@ Can be used to cleanup artifacts produced by command and control process exit co
 </div>
 <div class="method item">
     <div id="method_parseAlias" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l449"><code>lib&#x2F;models&#x2F;command.js:449</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l437"><code>lib&#x2F;models&#x2F;command.js:437</code></a></span>
         <h3 class="">
             public
             
@@ -1219,7 +1216,7 @@ Can be used to cleanup artifacts produced by command and control process exit co
 </div>
 <div class="method item">
     <div id="method_parseArgs" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l541"><code>lib&#x2F;models&#x2F;command.js:541</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l529"><code>lib&#x2F;models&#x2F;command.js:529</code></a></span>
         <h3 class="">
             public
             
@@ -1274,7 +1271,7 @@ Can be used to cleanup artifacts produced by command and control process exit co
 </div>
 <div class="method item">
     <div id="method_printBasicHelp" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l607"><code>lib&#x2F;models&#x2F;command.js:607</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l595"><code>lib&#x2F;models&#x2F;command.js:595</code></a></span>
         <h3 class="">
             public
             
@@ -1303,7 +1300,7 @@ but may be overridden if necessary.</p>
 </div>
 <div class="method item">
     <div id="method_printDetailedHelp" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l638"><code>lib&#x2F;models&#x2F;command.js:638</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l626"><code>lib&#x2F;models&#x2F;command.js:626</code></a></span>
         <h3 class="">
             public
             
@@ -1325,7 +1322,7 @@ for each command where further help text is required.</p>
 </div>
 <div class="method item">
     <div id="method_registerOptions" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l154"><code>lib&#x2F;models&#x2F;command.js:154</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l153"><code>lib&#x2F;models&#x2F;command.js:153</code></a></span>
         <h3 class="">
             public
             
@@ -1375,7 +1372,7 @@ existing availableOptions before building the optionsAliases which are used to d
 </div>
 <div class="method item">
     <div id="method_run" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l597"><code>lib&#x2F;models&#x2F;command.js:597</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l585"><code>lib&#x2F;models&#x2F;command.js:585</code></a></span>
         <h3 class="">
             public
             
@@ -1422,7 +1419,7 @@ existing availableOptions before building the optionsAliases which are used to d
 </div>
 <div class="method item">
     <div id="method_validateAlias" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l509"><code>lib&#x2F;models&#x2F;command.js:509</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l497"><code>lib&#x2F;models&#x2F;command.js:497</code></a></span>
         <h3 class="">
             public
             
@@ -1477,7 +1474,7 @@ existing availableOptions before building the optionsAliases which are used to d
 </div>
 <div class="method item">
     <div id="method_validateAndRun" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l257"><code>lib&#x2F;models&#x2F;command.js:257</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l255"><code>lib&#x2F;models&#x2F;command.js:255</code></a></span>
         <h3 class="">
             public
             
@@ -1503,7 +1500,7 @@ existing availableOptions before building the optionsAliases which are used to d
 </div>
 <div class="method item">
     <div id="method_validateOption" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l423"><code>lib&#x2F;models&#x2F;command.js:423</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l411"><code>lib&#x2F;models&#x2F;command.js:411</code></a></span>
         <h3 class="">
             public
             
@@ -1563,7 +1560,7 @@ existing availableOptions before building the optionsAliases which are used to d
         <h2 id="private-methods">Private Methods</h2>
 <div class="method item private">
     <div id="method_runTask" class="title">
-        <span class="source-link"><a href="../files/lib_models_command.js.html#l208"><code>lib&#x2F;models&#x2F;command.js:208</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_command.js.html#l206"><code>lib&#x2F;models&#x2F;command.js:206</code></a></span>
         <h3 class="">
             private
             

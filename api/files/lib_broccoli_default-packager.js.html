@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -100,7 +98,6 @@ const preprocessJs = p.preprocessJs;
 const preprocessTemplates = p.preprocessTemplates;
 const preprocessMinifyCss = p.preprocessMinifyCss;
 
-const DEFAULT_BOWER_PATH = &#x27;bower_components&#x27;;
 const DEFAULT_VENDOR_PATH = &#x27;vendor&#x27;;
 const EMBER_CLI_INTERNAL_FILES_PATH = &#x27;/vendor/ember-cli/&#x27;;
 const EMBER_CLI_FILES = [
@@ -187,7 +184,6 @@ function getVendorFiles(files, isMainVendorFile) {
 module.exports = class DefaultPackager {
   constructor(options) {
     this._cachedTests = null;
-    this._cachedBower = null;
     this._cachedVendor = null;
     this._cachedPublic = null;
     this._cachedConfig = null;
@@ -234,7 +230,6 @@ module.exports = class DefaultPackager {
    * /
    * ├── addon-tree-output/
    * ├── the-best-app-ever/
-   * ├── bower_components/
    * └── vendor/
    * &#x60;&#x60;&#x60;
    *
@@ -278,8 +273,8 @@ module.exports = class DefaultPackager {
   }
 
   /*
-   * Combines compiled javascript, external files (node modules, bower
-   * components), vendor files and processed configuration (based on the
+   * Combines compiled javascript, external files (node modules),
+   * vendor files and processed configuration (based on the
    * environment) into a single tree.
    *
    * Input tree:
@@ -288,7 +283,6 @@ module.exports = class DefaultPackager {
    * /
    * ├── addon-tree-output/
    * ├── the-best-app-ever/
-   * ├── bower_components/
    * └── vendor/
    * &#x60;&#x60;&#x60;
    *
@@ -380,7 +374,6 @@ module.exports = class DefaultPackager {
    * &#x60;&#x60;&#x60;
    * /
    * ├── addon-tree-output/
-   * ├── bower_components/
    * └── vendor/
    * &#x60;&#x60;&#x60;
    *
@@ -483,7 +476,6 @@ module.exports = class DefaultPackager {
    * &#x60;&#x60;&#x60;
    * /
    * ├── addon-tree-output/
-   * ├── bower_components/
    * ├── the-best-app-ever/
    * └── vendor/
    * &#x60;&#x60;&#x60;
@@ -525,6 +517,7 @@ module.exports = class DefaultPackager {
         &#x27;template&#x27;,
         preprocessTemplates(preprocessedTemplatesFromAddons, {
           registry: this.registry,
+          treeType: &#x27;templates&#x27;,
         })
       );
     }
@@ -541,7 +534,6 @@ module.exports = class DefaultPackager {
    * &#x60;&#x60;&#x60;
    * /
    * ├── addon-tree-output/
-   * ├── bower_components/
    * ├── the-best-app-ever/
    * └── vendor/
    * &#x60;&#x60;&#x60;
@@ -584,6 +576,7 @@ module.exports = class DefaultPackager {
 
       let preprocessedApp = preprocessJs(app, &#x27;/&#x27;, this.name, {
         registry: this.registry,
+        treeType: &#x27;app&#x27;,
       });
 
       this._cachedProcessedJavascript = callAddonsPostprocessTreeHook(this.project, &#x27;js&#x27;, preprocessedApp);
@@ -601,9 +594,6 @@ module.exports = class DefaultPackager {
    *
    * &#x60;&#x60;&#x60;
    * addon-tree-output/
-   *   ...
-   * bower_components/
-   *   hint.css/
    *   ...
    * the-best-app-ever/
    *   styles/
@@ -632,13 +622,11 @@ module.exports = class DefaultPackager {
         outputPaths: this.distPaths.appCssFile,
         registry: this.registry,
         minifyCSS: this.minifyCSS.options,
+        treeType: &#x27;styles&#x27;,
       };
 
       let stylesAndVendor = callAddonsPreprocessTreeHook(this.project, &#x27;css&#x27;, tree);
-      stylesAndVendor = this._debugTree(stylesAndVendor, &#x27;mu-layout:addonsPreprocessTree:css&#x27;);
-
       let preprocessedStyles = preprocessCss(stylesAndVendor, &#x27;/app/styles&#x27;, &#x27;/assets&#x27;, options);
-      preprocessedStyles = this._debugTree(preprocessedStyles, &#x27;mu-layout:preprocess:css&#x27;);
 
       let vendorStyles = [];
       for (let outputFile in this.styleOutputFiles) {
@@ -678,43 +666,6 @@ module.exports = class DefaultPackager {
     }
 
     return this._cachedProcessedStyles;
-  }
-
-  /*
-   * Given an input tree, returns a properly assembled Broccoli tree with bower
-   * components.
-   *
-   * Given a tree:
-   *
-   * &#x60;&#x60;&#x60;
-   * ├── ember.js/
-   * ├── pusher/
-   * └── raven-js/
-   * &#x60;&#x60;&#x60;
-   *
-   * Returns:
-   *
-   * &#x60;&#x60;&#x60;
-   * [bowerDirectory]/
-   * ├── ember.js/
-   * ├── pusher/
-   * └── raven-js/
-   * &#x60;&#x60;&#x60;
-   *
-   * @private
-   * @method packageBower
-   * @param {BroccoliTree} tree
-   * @param {String} bowerDirectory Custom path to bower components
-   */
-  packageBower(tree, bowerDirectory) {
-    if (this._cachedBower === null) {
-      this._cachedBower = new Funnel(tree, {
-        destDir: bowerDirectory || DEFAULT_BOWER_PATH,
-        annotation: &#x27;Packaged Bower&#x27;,
-      });
-    }
-
-    return this._cachedBower;
   }
 
   /*
@@ -769,7 +720,6 @@ module.exports = class DefaultPackager {
    *
    * &#x60;&#x60;&#x60;
    * addon-tree-output/
-   * bower_components/
    * the-best-app-ever/
    * tests/
    * ├── acceptance/
@@ -819,6 +769,7 @@ module.exports = class DefaultPackager {
       const inputPath = &#x27;/tests&#x27;;
       let preprocessedTests = preprocessJs(treeToCompile, inputPath, this.name, {
         registry: this.registry,
+        treeType: &#x27;test&#x27;,
       });
 
       let mergedTestTrees = mergeTrees([addonTestSupportTree, preprocessedTests], {
@@ -839,7 +790,6 @@ module.exports = class DefaultPackager {
    *
    * &#x60;&#x60;&#x60;
    * addon-tree-output/
-   * bower_components/
    * the-best-app-ever/
    * tests/
    * ├── acceptance/
@@ -890,7 +840,6 @@ module.exports = class DefaultPackager {
    * /
    * ├── addon-tree-output/
    * ├── the-best-app-ever/
-   * ├── bower_components/
    * ├── tests/
    * └── vendor/
    * &#x60;&#x60;&#x60;
@@ -989,7 +938,6 @@ module.exports = class DefaultPackager {
    *
    * &#x60;&#x60;&#x60;
    * addon-tree-output/
-   * bower_components/
    * the-best-app-ever/
    * tests/
    * ├── acceptance/
@@ -1041,7 +989,6 @@ module.exports = class DefaultPackager {
    *
    * &#x60;&#x60;&#x60;
    * addon-tree-output/
-   * bower_components/
    * the-best-app-ever/
    * tests/
    * ├── acceptance/
@@ -1219,10 +1166,6 @@ module.exports = class DefaultPackager {
    *   ember-engines/
    *   ember-resolver/
    *   ...
-   * bower_components/
-   *   usertiming/
-   *   sinonjs/
-   *   ...
    * the-best-app-ever/
    *   components/
    *   config/
@@ -1284,10 +1227,6 @@ module.exports = class DefaultPackager {
    *   ember-engines/
    *   ember-resolver/
    *   ...
-   * bower_components/
-   *   usertiming/
-   *   sinonjs/
-   *   ...
    * the-best-app-ever/
    *   components/
    *   config/
@@ -1346,10 +1285,6 @@ module.exports = class DefaultPackager {
    *   ember-data/
    *   ember-engines/
    *   ember-resolver/
-   *   ...
-   * bower_components/
-   *   usertiming/
-   *   sinonjs/
    *   ...
    * the-best-app-ever/
    *   components/

@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -131,6 +129,8 @@ function instantiateAddons(parent, project, addonPackages) {
   });
 
   let addons = [];
+  let timings = new Map();
+
   graph.each((key, value) =&gt; {
     let addonInfo = value;
     if (addonInfo) {
@@ -150,28 +150,11 @@ function instantiateAddons(parent, project, addonPackages) {
         );
       }
 
-      let AddonConstructor = pkgInfo.getAddonConstructor();
+      // get an instance of the addon. If that fails it will throw.
+      let addon = pkgInfo.getAddonInstance(parent, project);
 
-      let addon;
+      timings.set(addon, Date.now() - start);
 
-      try {
-        addon = new AddonConstructor(parent, project);
-      } catch (e) {
-        if (parent &amp;&amp; parent.ui) {
-          parent.ui.writeError(e);
-        }
-        const SilentError = require(&#x27;silent-error&#x27;);
-        throw new SilentError(&#x60;An error occurred in the constructor for ${addonInfo.name} at ${addonInfo.path}&#x60;);
-      }
-
-      if (addon.initializeAddons) {
-        addon.initializeAddons();
-      } else {
-        addon.addons = [];
-      }
-
-      AddonConstructor._meta_.initializeIn = Date.now() - start;
-      addon.constructor = AddonConstructor;
       initializeAddonToken.stop();
 
       addons.push(addon);
@@ -182,10 +165,7 @@ function instantiateAddons(parent, project, addonPackages) {
     &#x27; addon info %o&#x27;,
     addons.map((addon) =&gt; ({
       name: addon.name,
-      times: {
-        initialize: addon.constructor._meta_.initializeIn,
-        lookup: addon.constructor._meta_.lookupIn,
-      },
+      initializeTotalMillis: timings.get(addon),
     }))
   );
 

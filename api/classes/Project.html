@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -127,7 +125,6 @@
                       <li><a href="#method_addonBlueprintLookupPaths">addonBlueprintLookupPaths</a></li>
                       <li><a href="#method_addonCommands">addonCommands</a></li>
                       <li><a href="#method_blueprintLookupPaths">blueprintLookupPaths</a></li>
-                      <li><a href="#method_bowerDependencies">bowerDependencies</a></li>
                       <li><a href="#method_configPath">configPath</a></li>
                       <li><a href="#method_configWithoutCache">configWithoutCache</a></li>
                       <li><a href="#method_dependencies">dependencies</a></li>
@@ -142,7 +139,6 @@
                       <li><a href="#method_reloadAddons">reloadAddons</a></li>
                       <li><a href="#method_reloadPkg">reloadPkg</a></li>
                       <li><a href="#method_resolveSync">resolveSync</a></li>
-                      <li><a href="#method_setupBowerDirectory">setupBowerDirectory</a></li>
                       <li><a href="#method_supportedInternalAddonPaths">supportedInternalAddonPaths</a></li>
                   </ul>
               </div>
@@ -151,7 +147,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -216,7 +212,7 @@ the path to your project.</p>
               <a href="#method_closestSync">closestSync</a>(pathName, _ui): <a href="../classes/Project.html" class="crosslink">Project</a>
             </div>
             <div class="short-description">
-              <p>Returns a new project based on the first package.json that is found in <code>pathName</code>.</p>
+              <p>Returns a new project based on the first <code>package.json</code> that is found in <code>pathName</code>.</p>
             </div>
           </td>
         </tr>
@@ -472,21 +468,6 @@ the path to your project.</p>
           </td>
           <td>
             <div class="method-name ">
-              <a href="#method_bowerDependencies">bowerDependencies</a>(bower): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a>
-            </div>
-            <div class="short-description">
-              <p>Returns the bower dependencies for this project.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            private
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
               <a href="#method_configPath">configPath</a>( ): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a>
             </div>
             <div class="short-description">
@@ -670,7 +651,7 @@ the path to your project.</p>
               <a href="#method_reloadPkg">reloadPkg</a>( ): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a>
             </div>
             <div class="short-description">
-              <p>Reloads package.json</p>
+              <p>Reloads package.json of the project. Clears and reloads the packageInfo and per-bundle addon cache, too.</p>
             </div>
           </td>
         </tr>
@@ -686,21 +667,6 @@ the path to your project.</p>
             </div>
             <div class="short-description">
               <p>Resolves the absolute path to a file synchronously</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            private
-            
-            
-          </td>
-          <td>
-            <div class="method-name ">
-              <a href="#method_setupBowerDirectory">setupBowerDirectory</a>( )
-            </div>
-            <div class="short-description">
-              <p>Sets the name of the bower directory for this project</p>
             </div>
           </td>
         </tr>
@@ -729,7 +695,7 @@ the path to your project.</p>
         <h2 id="static-public-methods">Static Public Methods</h2>
 <div class="method item">
     <div id="method_getProjectRoot" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l705"><code>lib&#x2F;models&#x2F;project.js:705</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l694"><code>lib&#x2F;models&#x2F;project.js:694</code></a></span>
         <h3 class="">
             public
             static
@@ -762,7 +728,7 @@ the path to your project.</p>
         <h2 id="static-private-methods">Static Private Methods</h2>
 <div class="method item private">
     <div id="method_closestSync" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l645"><code>lib&#x2F;models&#x2F;project.js:645</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l619"><code>lib&#x2F;models&#x2F;project.js:619</code></a></span>
         <h3 class="">
             private
             static
@@ -773,8 +739,11 @@ the path to your project.</p>
 
 
 
-    <div class="method-description"><p>Returns a new project based on the first package.json that is found
+    <div class="method-description"><p>Returns a new project based on the first <code>package.json</code> that is found
 in <code>pathName</code>.</p>
+<p>If the above <code>package.json</code> specifies <code>ember-addon.projectRoot</code>, we load
+the project based on the relative path between this directory and the
+specified <code>projectRoot</code>.</p>
 </div>
 
       <div class="params">
@@ -834,7 +803,7 @@ in <code>pathName</code>.</p>
 </div>
 <div class="method item private">
     <div id="method_projectOrnullProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l681"><code>lib&#x2F;models&#x2F;project.js:681</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l670"><code>lib&#x2F;models&#x2F;project.js:670</code></a></span>
         <h3 class="">
             private
             static
@@ -991,7 +960,7 @@ in <code>pathName</code>, or the nullProject.</p>
         <h2 id="public-properties">Public Properties</h2>
 <div class="property item public">
   <div id="props_targets" class="title">
-    <span class="source-link"><a href="../files/lib_models_project.js.html#l264"><code>lib&#x2F;models&#x2F;project.js:264</code></a></span>
+    <span class="source-link"><a href="../files/lib_models_project.js.html#l244"><code>lib&#x2F;models&#x2F;project.js:244</code></a></span>
     <h3 class="">
       public
       
@@ -1025,7 +994,7 @@ in <code>pathName</code>, or the nullProject.</p>
   <div class="property-description"><p>Set when the <code>Watcher.detectWatchman</code> helper method finishes running,
 so that other areas of the system can be aware that watchman is being used.</p>
 <p>For example, this information is used in the broccoli build pipeline to know
-if we can watch additional directories (like bower_components) "cheaply".</p>
+if we can watch additional directories "cheaply".</p>
 <p>Contains <code>enabled</code> and <code>version</code>.</p>
 </div>
 
@@ -1036,7 +1005,7 @@ if we can watch additional directories (like bower_components) "cheaply".</p>
     <h2 id="public-methods">Public Methods</h2>
 <div class="method item public">
     <div id="method_config" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l226"><code>lib&#x2F;models&#x2F;project.js:226</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l206"><code>lib&#x2F;models&#x2F;project.js:206</code></a></span>
         <h3 class="">
             public
             
@@ -1093,7 +1062,7 @@ if we can watch additional directories (like bower_components) "cheaply".</p>
 </div>
 <div class="method item public">
     <div id="method_findAddonByName" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l607"><code>lib&#x2F;models&#x2F;project.js:607</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l581"><code>lib&#x2F;models&#x2F;project.js:581</code></a></span>
         <h3 class="">
             public
             
@@ -1150,7 +1119,7 @@ if we can watch additional directories (like bower_components) "cheaply".</p>
 </div>
 <div class="method item public">
     <div id="method_generateTestFile" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l621"><code>lib&#x2F;models&#x2F;project.js:621</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l595"><code>lib&#x2F;models&#x2F;project.js:595</code></a></span>
         <h3 class="">
             public
             
@@ -1163,7 +1132,7 @@ if we can watch additional directories (like bower_components) "cheaply".</p>
 
     <div class="method-description"><p>Generate test file contents.</p>
 <p>This method is supposed to be overwritten by test framework addons
-like <code>ember-qunit</code> and <code>ember-mocha</code>.</p>
+like <code>ember-qunit</code>.</p>
 </div>
 
       <div class="params">
@@ -1223,7 +1192,7 @@ like <code>ember-qunit</code> and <code>ember-mocha</code>.</p>
 </div>
 <div class="method item">
     <div id="method_isEmberCLIAddon" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l199"><code>lib&#x2F;models&#x2F;project.js:199</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l179"><code>lib&#x2F;models&#x2F;project.js:179</code></a></span>
         <h3 class="">
             public
             
@@ -1251,7 +1220,7 @@ like <code>ember-qunit</code> and <code>ember-mocha</code>.</p>
 </div>
 <div class="method item public">
     <div id="method_require" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l340"><code>lib&#x2F;models&#x2F;project.js:340</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l320"><code>lib&#x2F;models&#x2F;project.js:320</code></a></span>
         <h3 class="">
             public
             
@@ -1315,7 +1284,7 @@ version of ember-cli.</p>
         <h2 id="private-methods">Private Methods</h2>
 <div class="method item private">
     <div id="method_addonBlueprintLookupPaths" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l554"><code>lib&#x2F;models&#x2F;project.js:554</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l517"><code>lib&#x2F;models&#x2F;project.js:517</code></a></span>
         <h3 class="">
             private
             
@@ -1343,7 +1312,7 @@ version of ember-cli.</p>
 </div>
 <div class="method item private">
     <div id="method_addonCommands" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l461"><code>lib&#x2F;models&#x2F;project.js:461</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l424"><code>lib&#x2F;models&#x2F;project.js:424</code></a></span>
         <h3 class="">
             private
             
@@ -1372,7 +1341,7 @@ version of ember-cli.</p>
 </div>
 <div class="method item private">
     <div id="method_blueprintLookupPaths" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l536"><code>lib&#x2F;models&#x2F;project.js:536</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l499"><code>lib&#x2F;models&#x2F;project.js:499</code></a></span>
         <h3 class="">
             private
             
@@ -1399,65 +1368,8 @@ version of ember-cli.</p>
 
 </div>
 <div class="method item private">
-    <div id="method_bowerDependencies" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l375"><code>lib&#x2F;models&#x2F;project.js:375</code></a></span>
-        <h3 class="">
-            private
-            
-            
-            bowerDependencies(bower): <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a>
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"><p>Returns the bower dependencies for this project.</p>
-</div>
-
-      <div class="params">
-        <h4>Parameters:</h4>
-        <table>
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Attribute</th>
-            <th>Description</th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>bower</td>
-              <td><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></td>
-              <td>
-                <ul>
-                  
-                  
-                  
-                </ul>
-              </td>
-              <td><p>Path to bower.json</p>
-</td>
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-
-      <div class="return">
-        <h4>Return:</h4>
-        <div>
-          <span class="return-type"><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-          <span class="return-description"><p>Bower dependencies</p>
-</span>
-        </div>
-      </div>
-
-
-</div>
-<div class="method item private">
     <div id="method_configPath" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l209"><code>lib&#x2F;models&#x2F;project.js:209</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l189"><code>lib&#x2F;models&#x2F;project.js:189</code></a></span>
         <h3 class="">
             private
             
@@ -1485,7 +1397,7 @@ version of ember-cli.</p>
 </div>
 <div class="method item private">
     <div id="method_configWithoutCache" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l245"><code>lib&#x2F;models&#x2F;project.js:245</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l225"><code>lib&#x2F;models&#x2F;project.js:225</code></a></span>
         <h3 class="">
             private
             
@@ -1541,7 +1453,7 @@ version of ember-cli.</p>
 </div>
 <div class="method item private">
     <div id="method_dependencies" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l355"><code>lib&#x2F;models&#x2F;project.js:355</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l335"><code>lib&#x2F;models&#x2F;project.js:335</code></a></span>
         <h3 class="">
             private
             
@@ -1612,7 +1524,7 @@ version of ember-cli.</p>
 </div>
 <div class="method item private">
     <div id="method_discoverAddons" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l417"><code>lib&#x2F;models&#x2F;project.js:417</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l381"><code>lib&#x2F;models&#x2F;project.js:381</code></a></span>
         <h3 class="">
             private
             
@@ -1634,7 +1546,7 @@ package.json contents in this.addonPackages as key-value pairs.</p>
 </div>
 <div class="method item private">
     <div id="method_eachAddonCommand" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l502"><code>lib&#x2F;models&#x2F;project.js:502</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l465"><code>lib&#x2F;models&#x2F;project.js:465</code></a></span>
         <h3 class="">
             private
             
@@ -1688,7 +1600,7 @@ Example:</p>
 </div>
 <div class="method item private">
     <div id="method_getAddonsConfig" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l291"><code>lib&#x2F;models&#x2F;project.js:291</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l271"><code>lib&#x2F;models&#x2F;project.js:271</code></a></span>
         <h3 class="">
             private
             
@@ -1759,7 +1671,7 @@ Example:</p>
 </div>
 <div class="method item private">
     <div id="method_has" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l314"><code>lib&#x2F;models&#x2F;project.js:314</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l294"><code>lib&#x2F;models&#x2F;project.js:294</code></a></span>
         <h3 class="">
             private
             
@@ -1816,7 +1728,7 @@ Example:</p>
 </div>
 <div class="method item private">
     <div id="method_initializeAddons" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l441"><code>lib&#x2F;models&#x2F;project.js:441</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l403"><code>lib&#x2F;models&#x2F;project.js:403</code></a></span>
         <h3 class="">
             private
             
@@ -1836,7 +1748,7 @@ Example:</p>
 </div>
 <div class="method item private">
     <div id="method_isEmberCLIProject" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l187"><code>lib&#x2F;models&#x2F;project.js:187</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l167"><code>lib&#x2F;models&#x2F;project.js:167</code></a></span>
         <h3 class="">
             private
             
@@ -1865,7 +1777,7 @@ This checks whether ember-cli is listed in devDependencies.</p>
 </div>
 <div class="method item private">
     <div id="method_localBlueprintLookupPath" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l525"><code>lib&#x2F;models&#x2F;project.js:525</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l488"><code>lib&#x2F;models&#x2F;project.js:488</code></a></span>
         <h3 class="">
             private
             
@@ -1893,7 +1805,7 @@ This checks whether ember-cli is listed in devDependencies.</p>
 </div>
 <div class="method item private">
     <div id="method_name" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l174"><code>lib&#x2F;models&#x2F;project.js:174</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l154"><code>lib&#x2F;models&#x2F;project.js:154</code></a></span>
         <h3 class="">
             private
             
@@ -1921,7 +1833,7 @@ This checks whether ember-cli is listed in devDependencies.</p>
 </div>
 <div class="method item private">
     <div id="method_reloadAddons" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l595"><code>lib&#x2F;models&#x2F;project.js:595</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l568"><code>lib&#x2F;models&#x2F;project.js:568</code></a></span>
         <h3 class="">
             private
             
@@ -1941,7 +1853,7 @@ This checks whether ember-cli is listed in devDependencies.</p>
 </div>
 <div class="method item private">
     <div id="method_reloadPkg" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l577"><code>lib&#x2F;models&#x2F;project.js:577</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l540"><code>lib&#x2F;models&#x2F;project.js:540</code></a></span>
         <h3 class="">
             private
             
@@ -1952,7 +1864,8 @@ This checks whether ember-cli is listed in devDependencies.</p>
 
 
 
-    <div class="method-description"><p>Reloads package.json</p>
+    <div class="method-description"><p>Reloads package.json of the project. Clears and reloads the packageInfo and
+per-bundle addon cache, too.</p>
 </div>
 
 
@@ -1969,7 +1882,7 @@ This checks whether ember-cli is listed in devDependencies.</p>
 </div>
 <div class="method item private">
     <div id="method_resolveSync" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l326"><code>lib&#x2F;models&#x2F;project.js:326</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l306"><code>lib&#x2F;models&#x2F;project.js:306</code></a></span>
         <h3 class="">
             private
             
@@ -2025,28 +1938,8 @@ This checks whether ember-cli is listed in devDependencies.</p>
 
 </div>
 <div class="method item private">
-    <div id="method_setupBowerDirectory" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l101"><code>lib&#x2F;models&#x2F;project.js:101</code></a></span>
-        <h3 class="">
-            private
-            
-            
-            setupBowerDirectory( )
-        </h3>
-    </div>
-
-
-
-    <div class="method-description"><p>Sets the name of the bower directory for this project</p>
-</div>
-
-
-
-
-</div>
-<div class="method item private">
     <div id="method_supportedInternalAddonPaths" class="title">
-        <span class="source-link"><a href="../files/lib_models_project.js.html#l391"><code>lib&#x2F;models&#x2F;project.js:391</code></a></span>
+        <span class="source-link"><a href="../files/lib_models_project.js.html#l355"><code>lib&#x2F;models&#x2F;project.js:355</code></a></span>
         <h3 class="">
             private
             

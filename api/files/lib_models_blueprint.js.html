@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -97,12 +95,11 @@ const inflector = require(&#x27;inflection&#x27;);
 const minimatch = require(&#x27;minimatch&#x27;);
 const path = require(&#x27;path&#x27;);
 const stringUtils = require(&#x27;ember-cli-string-utils&#x27;);
-const _ = require(&#x27;ember-cli-lodash-subset&#x27;);
+const { merge, zipObject, intersection, cloneDeep, compact, uniq } = require(&#x27;ember-cli-lodash-subset&#x27;);
 const walkSync = require(&#x27;walk-sync&#x27;);
 const SilentError = require(&#x27;silent-error&#x27;);
 const CoreObject = require(&#x27;core-object&#x27;);
 const EOL = require(&#x27;os&#x27;).EOL;
-const bowEpParser = require(&#x27;bower-endpoint-parser&#x27;);
 const logger = require(&#x27;heimdalljs-logger&#x27;)(&#x27;ember-cli:blueprint&#x27;);
 const normalizeEntityName = require(&#x27;ember-cli-normalize-entity-name&#x27;);
 const isAddon = require(&#x27;../utilities/is-addon&#x27;);
@@ -270,6 +267,7 @@ const initialIgnoredFiles = [&#x27;.DS_Store&#x27;];
   @constructor
   @extends CoreObject
   @param {String} [blueprintPath]
+  @param {Object} [blueprintOptions]
 */
 let Blueprint = CoreObject.extend({
   availableOptions: [],
@@ -277,11 +275,41 @@ let Blueprint = CoreObject.extend({
 
   _printableProperties: [&#x27;name&#x27;, &#x27;description&#x27;, &#x27;availableOptions&#x27;, &#x27;anonymousOptions&#x27;, &#x27;overridden&#x27;],
 
-  init(blueprintPath) {
+  /**
+    Indicates whether or not a blueprint is a candidate for automatic transpilation from TS to JS.
+    This property could be false in the case that the blueprint is written in JS and is not intended
+    to work with TS at all, OR in the case that the blueprint is written in TS and the author does
+    not intend to support transpilation to JS.
+
+    @public
+    @property shouldTransformTypeScript
+    @type Boolean
+  */
+  shouldTransformTypeScript: false,
+
+  init(blueprintPath, blueprintOptions) {
     this._super();
 
     this.path = blueprintPath;
     this.name = path.basename(blueprintPath);
+
+    this._processOptions(blueprintOptions);
+  },
+
+  /**
+    Process the options object coming from either
+    the &#x60;init&#x60;, &#x60;install&#x60; or &#x60;uninstall&#x60; hook.
+
+    @private
+    @method _processOptions
+    @param {Object} options
+  */
+  _processOptions(options = {}) {
+    this.options = options;
+    this.dryRun = options.dryRun;
+    this.pod = options.pod;
+    this.project = options.project;
+    this.ui = options.ui;
   },
 
   /**
@@ -306,9 +334,10 @@ let Blueprint = CoreObject.extend({
 
     @public
     @method files
+    @param {Object} options
     @return {Array} Contents of the blueprint&#x27;s files directory
   */
-  files() {
+  files(/* options */) {
     if (this._files) {
       return this._files;
     }
@@ -511,10 +540,84 @@ let Blueprint = CoreObject.extend({
     let fileInfos = await process.call(this, intoDir, locals);
 
     // commit changes for each FileInfo (with prompting as needed)
-    await Promise.all(fileInfos.map((fi) =&gt; this._commit(fi)));
+    await Promise.all(fileInfos.map((info) =&gt; this._commit(info)));
 
     // run afterInstall/afterUninstall userland hooks
     await afterHook.call(this, options);
+  },
+
+  /**
+    @private
+    @method shouldConvertToJS
+    @param {Object} options
+    @param {FileInfo} fileInfo
+    @return {Boolean}
+  */
+  shouldConvertToJS(options, fileInfo) {
+    // If this isn&#x27;t turned on, it doesn&#x27;t matter what else was passed, we&#x27;re not touching it.
+    if (!this.shouldTransformTypeScript) {
+      return false;
+    }
+
+    // If the blueprint isn&#x27;t a TS file to begin with, there&#x27;s nothing to convert.
+    if (!isTypeScriptFile(fileInfo.outputPath)) {
+      // If the user wants TypeScript output but there is no TypeScript blueprint available, we want
+      // to warn them that they&#x27;re not going to get what they&#x27;re expecting while still at least giving
+      // them the JS output. We check for this *after* checking &#x60;shouldTranformTypeScript&#x60; because
+      // it&#x27;s possible for people to set &#x60;{typescript: true}&#x60; in their &#x60;.ember-cli&#x60; file, which would
+      // then erroneously trigger this message every time they generate a JS blueprint even though
+      // they didn&#x27;t pass the flag.
+      if (options.typescript === true &amp;&amp; isJavaScriptFile(fileInfo.outputPath)) {
+        this.ui.writeLine(
+          chalk.yellow(
+            &quot;You passed the &#x27;--typescript&#x27; flag but there is no TypeScript blueprint available. &quot; +
+              &#x27;A JavaScript blueprint will be generated instead.&#x27;
+          )
+        );
+      }
+
+      return false;
+    }
+
+    // Indicates when the user explicitly passed either &#x60;--typescript&#x60; or &#x60;--no-typescript&#x60; as opposed
+    // to not passing a flag at all and allowing for default behavior
+    const userExplicitlySelectedTypeScriptStatus = options.typescript !== undefined;
+
+    // Indicates when the user has asked for TypeScript either globally (by setting
+    // &#x60;isTypeScriptProject&#x60; to true) or locally (by passing the &#x60;--typescript&#x60; flag when they
+    // invoked the generator). Although ember-cli merges &#x60;.ember-cli&#x60; and all of the flag values into
+    // one object, we thought the DX would be improved by differentiating between what is intended
+    // to be global vs. local config.
+    const shouldUseTypeScript = userExplicitlySelectedTypeScriptStatus
+      ? options.typescript
+      : options.isTypeScriptProject;
+
+    // if the user wants TS output and we have a TS file available, we do *not* want to downlevel to JS
+    if (shouldUseTypeScript) {
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+    @private
+    @method convertToJS
+    @param {FileInfo} fileInfo
+    @return {Promise}
+  */
+  async convertToJS(fileInfo) {
+    let rendered = await fileInfo.render();
+
+    const { removeTypes } = require(&#x27;remove-types&#x27;);
+    const transformed = await removeTypes(rendered);
+
+    fileInfo.rendered = transformed;
+
+    fileInfo.displayPath = replaceExtension(fileInfo.displayPath, &#x27;.js&#x27;);
+    fileInfo.outputPath = replaceExtension(fileInfo.outputPath, &#x27;.js&#x27;);
+
+    return fileInfo;
   },
 
   /**
@@ -523,17 +626,14 @@ let Blueprint = CoreObject.extend({
     @return {Promise}
   */
   install(options) {
-    let ui = (this.ui = options.ui);
-    let dryRun = (this.dryRun = options.dryRun);
-    this.project = options.project;
-    this.pod = options.pod;
-    this.options = options;
-    this.hasPathToken = hasPathToken(this.files());
+    this._processOptions(options);
 
-    ui.writeLine(&#x60;installing ${this.name}&#x60;);
+    this.hasPathToken = hasPathToken(this.files(this.options));
 
-    if (dryRun) {
-      ui.writeLine(chalk.yellow(&#x27;You specified the dry-run flag, so no&#x27; + &#x27; changes will be written.&#x27;));
+    this.ui.writeLine(&#x60;installing ${this.name}&#x60;);
+
+    if (this.dryRun) {
+      this.ui.writeLine(chalk.yellow(&#x27;You specified the &#x60;dry-run&#x60; flag, so no changes will be written.&#x27;));
     }
 
     this._normalizeEntityName(options.entity);
@@ -553,17 +653,14 @@ let Blueprint = CoreObject.extend({
     @return {Promise}
   */
   uninstall(options) {
-    let ui = (this.ui = options.ui);
-    let dryRun = (this.dryRun = options.dryRun);
-    this.project = options.project;
-    this.pod = options.pod;
-    this.options = options;
-    this.hasPathToken = hasPathToken(this.files());
+    this._processOptions(options);
 
-    ui.writeLine(&#x60;uninstalling ${this.name}&#x60;);
+    this.hasPathToken = hasPathToken(this.files(this.options));
 
-    if (dryRun) {
-      ui.writeLine(chalk.yellow(&#x27;You specified the dry-run flag, so no&#x27; + &#x27; files will be deleted.&#x27;));
+    this.ui.writeLine(&#x60;uninstalling ${this.name}&#x60;);
+
+    if (this.dryRun) {
+      this.ui.writeLine(chalk.yellow(&#x27;You specified the &#x60;dry-run&#x60; flag, so no files will be deleted.&#x27;));
     }
 
     this._normalizeEntityName(options.entity);
@@ -718,7 +815,7 @@ let Blueprint = CoreObject.extend({
     };
 
     let customTokens = this.fileMapTokens(options) || options.fileMapTokens || {};
-    return _.merge(standardTokens, customTokens);
+    return merge(standardTokens, customTokens);
   },
 
   /**
@@ -730,10 +827,10 @@ let Blueprint = CoreObject.extend({
   */
   generateFileMap(fileMapVariables) {
     let tokens = this._fileMapTokens(fileMapVariables);
-    let fileMapValues = _.values(tokens);
+    let fileMapValues = Object.values(tokens);
     let tokenValues = fileMapValues.map((token) =&gt; token(fileMapVariables));
     let tokenKeys = Object.keys(tokens);
-    return _.zipObject(tokenKeys, tokenValues);
+    return zipObject(tokenKeys, tokenValues);
   },
 
   /**
@@ -799,10 +896,10 @@ let Blueprint = CoreObject.extend({
     @return {Array} files
   */
   _getFilesForInstall(targetFiles) {
-    let files = this.files();
+    let files = this.files(this.options);
 
     // if we&#x27;ve defined targetFiles, get file info on ones that match
-    return (targetFiles &amp;&amp; targetFiles.length &gt; 0 &amp;&amp; _.intersection(files, targetFiles)) || files;
+    return (targetFiles &amp;&amp; targetFiles.length &gt; 0 &amp;&amp; intersection(files, targetFiles)) || files;
   },
 
   /**
@@ -838,6 +935,17 @@ let Blueprint = CoreObject.extend({
 
     return Promise.all(fileInfos.filter(isValidFile).map(prepareConfirm))
       .then(finishProcessingForInstall)
+      .then((fileInfos) =&gt; {
+        return Promise.all(
+          fileInfos.map((info) =&gt; {
+            if (this.shouldConvertToJS(this.options, info)) {
+              return this.convertToJS(info);
+            }
+
+            return info;
+          })
+        );
+      })
       .then((fileInfos) =&gt; fileInfos.concat(fileInfosToRemove));
   },
 
@@ -847,11 +955,49 @@ let Blueprint = CoreObject.extend({
     @param {Object} templateVariables
   */
   processFilesForUninstall(intoDir, templateVariables) {
-    let fileInfos = this._getFileInfos(this.files(), intoDir, templateVariables);
+    let fileInfos = this._getFileInfos(this.files(this.options), intoDir, templateVariables);
 
     this._ignoreUpdateFiles();
 
-    return finishProcessingForUninstall(fileInfos.filter(isValidFile));
+    fileInfos = fileInfos.filter(isValidFile).reduce((acc, info) =&gt; {
+      // if it&#x27;s possible that this blueprint could have produced either typescript OR javascript, we have to do some
+      // work to figure out which files to delete.
+      if (this.shouldTransformTypeScript) {
+        if (this.options.typescript === true) {
+          // if the user explicitly passed &#x60;--typescript&#x60;, we only want to delete TS files, so we stick with the existing
+          // info object since it will contain a .ts outputPath (since we know this blueprint is authored in TS because
+          // of our check above)
+          acc.push(info);
+          return acc;
+        }
+
+        const jsInfo = new FileInfo({
+          ...info,
+          outputPath: replaceExtension(info.outputPath, &#x27;.js&#x27;),
+          displayPath: replaceExtension(info.displayPath, &#x27;.js&#x27;),
+        });
+
+        if (this.options.typescript === false) {
+          // if the user explicitly passed &#x60;--no-typescript&#x60;, we only want to delete JS file, so we return our newly
+          // created jsInfo object since it contains the javascript version of the output path.
+          acc.push(jsInfo);
+          return acc;
+        }
+
+        if (this.options.typescript === undefined) {
+          // if the user didn&#x27;t specify one way or the other, then both the JS and TS paths are possibilities, so we add
+          // both of them to the list. &#x60;finishProcessingForUninstall&#x60; will actually look to see which of them exists and
+          // delete whatever it finds.
+          acc.push(info, jsInfo);
+          return acc;
+        }
+      }
+
+      acc.push(info);
+      return acc;
+    }, []);
+
+    return finishProcessingForUninstall(fileInfos);
   },
 
   /**
@@ -880,7 +1026,7 @@ let Blueprint = CoreObject.extend({
     @return {Boolean}
   */
   supportsAddon() {
-    return /__root__/.test(this.files().join());
+    return /__root__/.test(this.files(this.options).join());
   },
 
   /**
@@ -942,7 +1088,7 @@ let Blueprint = CoreObject.extend({
         rawArgs: options.rawArgs,
       };
 
-      return _.merge({}, standardLocals, customLocals);
+      return merge({}, standardLocals, customLocals);
     });
   },
 
@@ -1076,73 +1222,6 @@ let Blueprint = CoreObject.extend({
   },
 
   /**
-    Used to add a package to the projects &#x60;bower.json&#x60;.
-
-    Generally, this would be done from the &#x60;afterInstall&#x60; hook, to
-    ensure that a package that is required by a given blueprint is
-    available.
-
-    &#x60;localPackageName&#x60; and &#x60;target&#x60; may be thought of as equivalent
-    to the key-value pairs in the &#x60;dependency&#x60; or &#x60;devDepencency&#x60;
-    objects contained within a bower.json file.
-    @method addBowerPackageToProject
-    @param {String} localPackageName
-    @param {String} target
-    @param {Object} installOptions
-    @return {Promise}
-
-    @example
-    &#x60;&#x60;&#x60;js
-    addBowerPackageToProject(&#x27;jquery&#x27;, &#x27;~1.11.1&#x27;);
-    addBowerPackageToProject(&#x27;old_jquery&#x27;, &#x27;jquery#~1.9.1&#x27;);
-    addBowerPackageToProject(&#x27;bootstrap-3&#x27;, &#x27;https://twitter.github.io/bootstrap/assets/bootstrap&#x27;);
-    &#x60;&#x60;&#x60;
-  */
-  addBowerPackageToProject(localPackageName, target, installOptions) {
-    let lpn = localPackageName;
-    let tar = target;
-    let packageObject = bowEpParser.json2decomposed(lpn, tar);
-    return this.addBowerPackagesToProject([packageObject], installOptions);
-  },
-
-  /**
-    Used to add an array of packages to the projects &#x60;bower.json&#x60;.
-
-    Generally, this would be done from the &#x60;afterInstall&#x60; hook, to
-    ensure that a package that is required by a given blueprint is
-    available.
-
-    Expects each array item to be an object with a &#x60;name&#x60;.  Each object
-    may optionally have a &#x60;target&#x60; to specify a specific version, or a
-    &#x60;source&#x60; to specify a non-local name to be resolved.
-
-    @method addBowerPackagesToProject
-    @param {Array} packages
-    @param {Object} installOptions
-    @return {Promise}
-  */
-  addBowerPackagesToProject(packages, installOptions) {
-    let task = this.taskFor(&#x27;bower-install&#x27;);
-    let installText = packages.length &gt; 1 ? &#x27;install bower packages&#x27; : &#x27;install bower package&#x27;;
-    let packageNames = [];
-    let packageNamesAndVersions = packages
-      .map((pkg) =&gt; {
-        pkg.source = pkg.source || pkg.name;
-        packageNames.push(pkg.name);
-        return pkg;
-      })
-      .map(bowEpParser.compose);
-
-    this._writeStatusToUI(chalk.green, installText, packageNames.join(&#x27;, &#x27;));
-
-    return task.run({
-      verbose: true,
-      packages: packageNamesAndVersions,
-      installOptions: installOptions || { save: true },
-    });
-  },
-
-  /**
     Used to add an addon to the project&#x27;s &#x60;package.json&#x60; and run it&#x27;s
     &#x60;defaultBlueprint&#x60; if it provides one.
 
@@ -1205,12 +1284,43 @@ let Blueprint = CoreObject.extend({
     let installText = packages.length &gt; 1 ? &#x27;install addons&#x27; : &#x27;install addon&#x27;;
     this._writeStatusToUI(chalk.green, installText, taskOptions[&#x27;packages&#x27;].join(&#x27;, &#x27;));
 
-    return this.taskFor(&#x27;addon-install&#x27;).run(taskOptions);
+    let previousCwd;
+    if (!this.project.isEmberCLIProject()) {
+      // our blueprint ran *outside* an ember-cli project. So the only way this
+      // makes sense if the blueprint generated a new project, which we&#x27;re now
+      // ready to add some addons into. So we need to switch from &quot;outside&quot; mode
+      // to &quot;inside&quot; by reinitializing the Project.
+      //
+      // One might think the cache clear is unnecessary, because in theory the
+      // caches should be shareable, but in practice the new Project we create
+      // below will have the same root dir as the NullProject and that makes bad
+      // things happen.
+      this.project.packageInfoCache._clear();
+      const Project = require(&#x27;../../lib/models/project&#x27;);
+      this.project = taskOptions.blueprintOptions.project = Project.closestSync(
+        options.blueprintOptions.target,
+        this.project.ui,
+        this.project.cli
+      );
+
+      // The install task adds dependencies based on the current working directory.
+      // But in case we created the new project by calling the blueprint with a custom target directory (options.target),
+      // the current directory will *not* be the one the project is created in, so we must adjust this here.
+      previousCwd = process.cwd();
+      process.chdir(options.blueprintOptions.target);
+    }
+
+    let result = this.taskFor(&#x27;addon-install&#x27;).run(taskOptions);
+    if (previousCwd) {
+      return result.then(() =&gt; process.chdir(previousCwd));
+    }
+
+    return result;
   },
 
   /**
     Used to retrieve a task with the given name. Passes the new task
-    the standard information available (like &#x60;ui&#x60;, &#x60;analytics&#x60;, &#x60;project&#x60;, etc).
+    the standard information available (like &#x60;ui&#x60;, &#x60;project&#x60;, etc).
 
     @method taskFor
     @param dasherizedName
@@ -1222,7 +1332,6 @@ let Blueprint = CoreObject.extend({
     return new Task({
       ui: this.ui,
       project: this.project,
-      analytics: this.analytics,
     });
   },
 
@@ -1243,13 +1352,13 @@ let Blueprint = CoreObject.extend({
     Example:
     &#x60;&#x60;&#x60;
     // app/router.js
-    Router.map(function() {
+    Router.map(function () {
     });
     &#x60;&#x60;&#x60;
 
     &#x60;&#x60;&#x60;
     insertIntoFile(&#x27;app/router.js&#x27;, &#x27;  this.route(&quot;admin&quot;);&#x27;, {
-      after: &#x27;Router.map(function() {&#x27; + EOL
+      after: &#x27;Router.map(function () {&#x27; + EOL
     }).then(function() {
       // file has been inserted into!
     });
@@ -1259,7 +1368,7 @@ let Blueprint = CoreObject.extend({
 
     &#x60;&#x60;&#x60;
     // app/router.js
-    Router.map(function() {
+    Router.map(function () {
       this.route(&quot;admin&quot;);
     });
     &#x60;&#x60;&#x60;
@@ -1310,7 +1419,7 @@ let Blueprint = CoreObject.extend({
     this._printableProperties.forEach((key) =&gt; {
       let value = this[key];
       if (key === &#x27;availableOptions&#x27;) {
-        value = _.cloneDeep(value);
+        value = cloneDeep(value);
         value.forEach((option) =&gt; {
           if (typeof option.type === &#x27;function&#x27;) {
             option.type = option.type.name;
@@ -1356,6 +1465,8 @@ let Blueprint = CoreObject.extend({
   @param {Array} [options.paths] Extra paths to search for blueprints
   @param {Boolean} [options.ignoreMissing] Throw a &#x60;SilentError&#x60; if a
     matching Blueprint could not be found
+  @param {Object} [options.blueprintOptions] Options object that will be passed
+    along to the Blueprint instance on creation.
   @return {Blueprint}
 */
 Blueprint.lookup = function (name, options) {
@@ -1368,7 +1479,16 @@ Blueprint.lookup = function (name, options) {
     let blueprintPath = path.resolve(lookupPath, name);
 
     if (Blueprint._existsSync(blueprintPath)) {
-      return Blueprint.load(blueprintPath);
+      return Blueprint.load(blueprintPath, options.blueprintOptions);
+    }
+  }
+
+  // Check if &#x60;name&#x60; itself is a path to a blueprint:
+  if (name.includes(path.sep)) {
+    let blueprintPath = path.resolve(name);
+
+    if (Blueprint._existsSync(blueprintPath)) {
+      return Blueprint.load(blueprintPath, options.blueprintOptions);
     }
   }
 
@@ -1383,9 +1503,10 @@ Blueprint.lookup = function (name, options) {
   @method load
   @namespace Blueprint
   @param {String} blueprintPath
+  @param {Object} [blueprintOptions]
   @return {Blueprint} blueprint instance
 */
-Blueprint.load = function (blueprintPath) {
+Blueprint.load = function (blueprintPath, blueprintOptions) {
   if (fs.lstatSync(blueprintPath).isDirectory()) {
     let Constructor = Blueprint;
 
@@ -1400,7 +1521,7 @@ Blueprint.load = function (blueprintPath) {
       }
     }
 
-    return new Constructor(blueprintPath);
+    return new Constructor(blueprintPath, blueprintOptions);
   }
 };
 
@@ -1431,7 +1552,7 @@ Blueprint.list = function (options) {
       let blueprint = Blueprint.load(blueprintPath);
       if (blueprint) {
         let name = blueprint.name;
-        blueprint.overridden = _.includes(seen, name);
+        blueprint.overridden = seen.includes(name);
         seen.push(name);
 
         return blueprint;
@@ -1440,7 +1561,7 @@ Blueprint.list = function (options) {
 
     return {
       source,
-      blueprints: _.compact(blueprints),
+      blueprints: compact(blueprints),
     };
   });
 };
@@ -1559,7 +1680,7 @@ function isIgnored(info) {
 function generateLookupPaths(lookupPaths) {
   lookupPaths = lookupPaths || [];
   lookupPaths = lookupPaths.concat(Blueprint.defaultLookupPaths());
-  return _.uniq(lookupPaths);
+  return uniq(lookupPaths);
 }
 
 /**
@@ -1661,6 +1782,24 @@ function finishProcessingForUninstall(infos) {
   validInfos.forEach(markToBeRemoved);
 
   return validInfos;
+}
+
+function replaceExtension(filePath, newExt) {
+  const { dir, name } = path.parse(filePath);
+
+  return path.format({
+    dir,
+    name,
+    ext: newExt,
+  });
+}
+
+function isTypeScriptFile(filePath) {
+  return path.extname(filePath) === &#x27;.ts&#x27;;
+}
+
+function isJavaScriptFile(filePath) {
+  return path.extname(filePath) === &#x27;.js&#x27;;
 }
 
 module.exports = Blueprint;

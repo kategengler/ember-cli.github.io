@@ -42,7 +42,6 @@
                             <li><a href="../classes/Builder.html">Builder</a></li>
                             <li><a href="../classes/CLI.html">CLI</a></li>
                             <li><a href="../classes/Command.html">Command</a></li>
-                            <li><a href="../classes/CommandGenerator.html">CommandGenerator</a></li>
                             <li><a href="../classes/DefaultPackager.html">DefaultPackager</a></li>
                             <li><a href="../classes/EmberAddon.html">EmberAddon</a></li>
                             <li><a href="../classes/EmberApp.html">EmberApp</a></li>
@@ -51,10 +50,9 @@
                             <li><a href="../classes/Instrumentation.html">Instrumentation</a></li>
                             <li><a href="../classes/NodeModulesList.html">NodeModulesList</a></li>
                             <li><a href="../classes/NpmTask.html">NpmTask</a></li>
-                            <li><a href="../classes/PackageCache.html">PackageCache</a></li>
                             <li><a href="../classes/PackageInfo.html">PackageInfo</a></li>
                             <li><a href="../classes/PackageInfoCache.html">PackageInfoCache</a></li>
-                            <li><a href="../classes/PrivateTestHelpers.html">PrivateTestHelpers</a></li>
+                            <li><a href="../classes/PerBundleAddonCache.html">PerBundleAddonCache</a></li>
                             <li><a href="../classes/Project.html">Project</a></li>
                             <li><a href="../classes/ServeFilesAddon.html">ServeFilesAddon</a></li>
                             <li><a href="../classes/TestsServerAddon.html">TestsServerAddon</a></li>
@@ -69,7 +67,7 @@
             
             
             <div class="version-info">
-              Version: 3.21.2
+              Version: 5.4.0-a905f346b9
             </div>
             
         </div>
@@ -109,20 +107,20 @@ class WatcherAddon {
       autoIndex: false, // disable directory listings
     });
 
-    let baseURL = options.rootURL === &#x27;&#x27; ? &#x27;/&#x27; : cleanBaseURL(options.rootURL || options.baseURL);
+    let rootURL = options.rootURL === &#x27;&#x27; ? &#x27;/&#x27; : cleanBaseURL(options.rootURL);
 
-    logger.info(&#x27;serverMiddleware: baseURL: %s&#x27;, baseURL);
+    logger.info(&#x27;serverMiddleware: rootURL: %s&#x27;, rootURL);
 
     app.use((req, res, next) =&gt; {
       let oldURL = req.url;
       let url = req.serveUrl || req.url;
       logger.info(&#x27;serving: %s&#x27;, url);
 
-      let actualPrefix = req.url.slice(0, baseURL.length - 1); // Don&#x27;t care
-      let expectedPrefix = baseURL.slice(0, baseURL.length - 1); // about last slash
+      let actualPrefix = req.url.slice(0, rootURL.length - 1); // Don&#x27;t care
+      let expectedPrefix = rootURL.slice(0, rootURL.length - 1); // about last slash
 
       if (actualPrefix === expectedPrefix) {
-        let urlToBeServed = url.slice(actualPrefix.length); // Remove baseURL prefix
+        let urlToBeServed = url.slice(actualPrefix.length); // Remove rootURL prefix
         req.url = urlToBeServed;
         logger.info(&#x27;serving: (prefix stripped) %s, was: %s&#x27;, urlToBeServed, url);
 
